@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="JoinGun — ต้นแบบการค้นหาและเข้าร่วมกิจกรรมสำหรับนักศึกษา">
   <title>JoinGun · กิจกรรม</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="app.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">ข้ามไปเนื้อหา</a>
   <div class="app">
-    <header class="brand"><a href="#feed" aria-label="JoinGun กลับหน้ากิจกรรม"><span class="brand-mark" aria-hidden="true">J</span>JoinGun<span class="brand-dot">●</span></a><span class="badge">ต้นแบบ</span></header>
+    <header class="brand"><a href="#feed" aria-label="JoinGun กลับหน้ากิจกรรม"><span class="brand-mark" aria-hidden="true">J</span>JoinGun<span class="brand-dot">●</span></a><nav class="auth-nav" aria-label="บัญชีผู้ใช้"><a href="#login">เข้าสู่ระบบ</a><a class="auth-register" href="#register">สมัครสมาชิก</a></nav></header>
     <aside class="demo-note">ข้อมูลตัวอย่าง · บัญชีผ่านการยืนยันแล้ว<br>การเข้าร่วมจะล้างเมื่อรีเฟรชหน้า</aside>
     <main id="main" tabindex="-1"></main>
     <footer class="footer">JoinGun · นัดทำกิจกรรมในมหาวิทยาลัย</footer>
@@ -22,7 +24,7 @@
       <label for="category">หมวดกิจกรรม</label>
       <select id="category" name="category"><option value="all">ทุกหมวด</option><option value="sport">กีฬา</option><option value="study">อ่านหนังสือ</option><option value="cafe">คาเฟ่</option></select>
       <label for="date">วันที่ว่าง</label><input id="date" name="date" type="date">
-      <p class="muted caption">กิจกรรมตัวอย่างอยู่ระหว่าง 9–11 ก.ย. 2569</p>
+      <p class="muted caption">กิจกรรมตัวอย่างอยู่ระหว่าง 24–26 ก.ย. 2569</p>
       <button class="button primary" type="submit">แสดงกิจกรรม</button>
       <button class="button secondary" id="reset-filters" type="button">ล้างตัวกรอง</button>
     </form>
@@ -40,7 +42,36 @@
       <button class="button secondary" type="button" data-close="confirmation">กลับไปดูกิจกรรม</button>
     </form>
   </dialog>
+  <dialog id="auth-dialog" aria-labelledby="auth-title">
+    <form id="auth-form" class="stack">
+      <div class="dialog-heading"><h2 id="auth-title">เข้าสู่ระบบ</h2><button class="icon-button" type="button" data-close="auth-dialog" aria-label="ปิดหน้าบัญชี">×</button></div>
+      <p id="auth-copy" class="muted">ใช้บัญชีมหาวิทยาลัยของคุณเพื่อเข้าร่วมกิจกรรม</p>
+      <label for="auth-email">อีเมลมหาวิทยาลัย</label><input id="auth-email" type="email" placeholder="name@mfu.ac.th" autocomplete="email" required>
+      <label for="auth-password">รหัสผ่าน</label><input id="auth-password" type="password" placeholder="อย่างน้อย 8 ตัวอักษร" minlength="8" autocomplete="current-password" required>
+      <p id="auth-error" class="error-text" hidden></p>
+      <button class="button primary" type="submit" id="auth-submit">เข้าสู่ระบบ</button>
+      <button class="text-button" type="button" id="auth-switch">ยังไม่มีบัญชี? สมัครสมาชิก</button>
+    </form>
+  </dialog>
+  <dialog id="create-dialog" aria-labelledby="create-title">
+    <form id="create-form" class="stack">
+      <div class="dialog-heading"><h2 id="create-title">สร้างกิจกรรม</h2><button class="icon-button" type="button" data-close="create-dialog" aria-label="ปิดการสร้างกิจกรรม">×</button></div>
+      <p class="muted">ชวนเพื่อนในมหาวิทยาลัยมาทำสิ่งที่ชอบด้วยกัน</p>
+      <label for="activity-title">ชื่อกิจกรรม</label><input id="activity-title" type="text" placeholder="เช่น วิ่งรอบสนามตอนเย็น" required>
+      <label for="activity-category">หมวดกิจกรรม</label><select id="activity-category"><option value="sport">กีฬา</option><option value="study">อ่านหนังสือ</option><option value="cafe">คาเฟ่</option></select>
+      <label for="activity-date">วันที่</label><input id="activity-date" type="date" required>
+      <label for="activity-time">เวลาเริ่ม</label><input id="activity-time" type="time" required>
+      <label for="activity-place">สถานที่ในมหาวิทยาลัย</label><input id="activity-place" type="text" placeholder="เช่น สนามกีฬามหาวิทยาลัย" required>
+      <label for="create-map">เลือกจุดนัดหมายบนแผนที่</label><div id="create-map" class="map create-map" role="application" aria-label="เลือกพิกัดจุดนัดหมายในมหาวิทยาลัยแม่ฟ้าหลวง"></div><p id="selected-coordinates" class="caption muted">หมุดเริ่มต้น: ศูนย์กลางมหาวิทยาลัยแม่ฟ้าหลวง · กดบนแผนที่เพื่อเปลี่ยนจุด</p>
+      <label for="activity-meeting">รายละเอียดจุดนัดพบ</label><textarea id="activity-meeting" rows="3" placeholder="เช่น พบกันหน้าทางเข้าสนาม" required></textarea>
+      <label for="activity-capacity">จำนวนผู้เข้าร่วมทั้งหมด</label><input id="activity-capacity" type="number" min="2" max="50" value="6" required>
+      <p class="caption muted">ใช้พิกัดจากแผนที่สำหรับจุดนัดพบเท่านั้น ระบบไม่อ่านตำแหน่งปัจจุบันของคุณ</p>
+      <p id="create-error" class="error-text" hidden></p>
+      <button class="button primary" type="submit">เผยแพร่กิจกรรม</button>
+    </form>
+  </dialog>
   <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <noscript><p class="no-script">กรุณาเปิด JavaScript เพื่อทดลองค้นหาและเข้าร่วมกิจกรรม</p></noscript>
 </body>
 </html>
