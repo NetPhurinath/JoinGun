@@ -1,51 +1,21 @@
-# JoinGun — HTML Prototype
+# JoinGun — Existing UI with Posting Backend
 
-ต้นแบบ core workflow **เข้าร่วมกิจกรรมจากฟีด** สำหรับนักศึกษาที่เข้าสู่ระบบและยืนยันอีเมลแล้ว ใช้ HTML, CSS และ JavaScript ธรรมดา ไม่มี framework หรือขั้นตอนติดตั้ง dependency
+The existing mobile-first design, activity cards, create dialog and map presentation now use the Express/SQLite posting MVP. Root `index.html` opens this interface.
 
-## เปิดใช้งาน
+## Run and verify manually
 
-ดาวน์โหลดหรือ clone repo แล้วเปิด [prototype/index.html](prototype/index.html) ใน Chrome, Edge หรือ Firefox รุ่นปัจจุบัน โดยเก็บ [styles.css](prototype/styles.css) และ [app.js](prototype/app.js) ไว้ในโฟลเดอร์เดียวกัน แนะนำให้เปิดผ่าน local HTTP server เพราะแผนที่ใช้ Leaflet และ OpenStreetMap จากภายนอก
+1. Run `npm ci` and `npm start` from the repository root. Open `http://127.0.0.1:3000`.
+2. Select **สร้างโพสต์**, choose **ข้อความทั่วไป**, enter content and publish. The saved post appears in the feed.
+3. Create another post, choose **กิจกรรม**, and enter content, title, category, future date/time, location, meeting details and capacity. Optionally click the map to choose a pin.
+4. Select the separate location consent checkbox and publish. Open **ดูรายละเอียด** to inspect saved activity fields and the selected pin.
+5. Reload the browser and confirm both posts remain. Search and filter by category/date; clear filters to show all posts.
 
-GitHub แสดงไฟล์ HTML เป็น source code หากต้องการทดลองกดให้เปิดไฟล์ที่ดาวน์โหลดมาบนเครื่อง การ push repo ครั้งนี้ไม่ได้เปิดใช้ GitHub Pages
+Failure checks: publishing without required fields or consent must not save a post; server validation errors retain the form; unavailable backend shows a retry message. Internet is required for Leaflet/tiles, but a text-only meeting location can still be posted without a map pin. Dates are interpreted/displayed in Asia/Bangkok.
 
-## หน้าจอและขั้นตอนทดลอง
+## Scope
 
-| Journey | หน้าจอ / การกระทำ | ผลที่คาดหวัง |
-| --- | --- | --- |
-| 1 | หน้ากิจกรรม `#feed` | เห็นกิจกรรมตัวอย่าง 4 รายการ พร้อมวันเวลา สถานที่ และจำนวนคน |
-| 2 | กด “สมัครสมาชิก” ใช้อีเมล `@lamduan.mfu.ac.th` และรหัสผ่านอย่างน้อย 8 ตัวอักษร | เปิดบัญชีทดลองและกลับไปยังฟีด; การเข้าสู่ระบบยังเป็นข้อมูลในหน่วยความจำ |
-| 3 | กด “ตัวกรอง” เลือก “กีฬา” และวันที่ 24 ก.ย. 2569 แล้วกด “แสดงกิจกรรม” | เหลือกิจกรรม “ตีแบดหลังเลิกเรียน”; ค้นหาด้วยชื่อหรือสถานที่ได้ด้วย |
-| 4 | กด “ดูรายละเอียด” | เห็นรายละเอียด ผู้จัด พิกัดจริงบนแผนที่ OpenStreetMap ในมหาวิทยาลัยแม่ฟ้าหลวง และปุ่ม “เข้าร่วมกิจกรรม” |
-| 5 | กด “เข้าร่วมกิจกรรม” อ่านนโยบาย แล้วเลือก checkbox ความยินยอมและกด “ยืนยันเข้าร่วม” | ปุ่มยืนยันใช้ไม่ได้ก่อนให้ความยินยอม; เมื่อกดแล้วแสดงกำลังเข้าร่วมและป้องกันการกดซ้ำ |
-| 6 | ในหน้ารายละเอียดหลังเข้าร่วม กด “ตั้งเตือนก่อนเริ่ม 30 นาที” | แสดงสถานะตั้งเตือนแล้ว และขอสิทธิ์ browser notification หากเบราว์เซอร์รองรับ |
-| 7 | หน้าผลสำเร็จ `#success/badminton` แล้วกด “ดูรายละเอียดกิจกรรม” | แสดง “เข้าร่วมแล้ว” จำนวนเพิ่มจาก 4/8 เป็น 5/8 และไม่มีปุ่มเข้าร่วมซ้ำ |
+Only posting and viewing are connected to the backend. The fixed actor is **Demo Student**, not a verified real account. Simulated auth, join and reminder flows from the previous prototype are no longer displayed in this posting MVP. No signup, likes, comments or joining have been added.
 
-### สร้างกิจกรรมของตัวเอง
+The original design tokens and layout remain in `prototype/styles.css`. UI assets are served explicitly by Express; other `.docs` files and the database are not public. HTML opened directly or via GitHub Pages has no backend; use the local server URL.
 
-1. สมัครสมาชิกหรือเข้าสู่ระบบด้วยอีเมล `@lamduan.mfu.ac.th`
-2. กด “สร้างกิจกรรม” บนแถบด้านบน
-3. กรอกชื่อ หมวด วันที่ เวลา สถานที่ รายละเอียดจุดนัดพบ และจำนวนผู้เข้าร่วม
-4. กดหรือเลื่อนหมุดบนแผนที่เพื่อเลือกพิกัดจริงในมหาวิทยาลัยแม่ฟ้าหลวง
-5. กด “เผยแพร่กิจกรรม” กิจกรรมใหม่จะขึ้นเป็นรายการแรกในฟีด
-
-มี 3 หน้าหลัก (ฟีด รายละเอียด ผลสำเร็จ), 3 dialog (ตัวกรอง ยืนยัน login/register) และแผนที่ Leaflet ในหน้ารายละเอียด ใช้ hash navigation เพื่อรองรับปุ่มย้อนกลับของเบราว์เซอร์
-
-เพิ่มเติม: ทดลองวันที่ที่ไม่มีกิจกรรมเพื่อดู empty state และกด “ล้างตัวกรอง”; ปิดแผงยืนยันหรือกด Escape ก่อนส่งจะไม่เข้าร่วม; เข้าร่วมกิจกรรมที่สองจะแสดงความยินยอมที่ให้ไว้แล้วและปุ่ม “จัดการความยินยอม” เพื่อเลือกใหม่ รีเฟรชหน้าเพื่อล้างข้อมูลทดลองทั้งหมด
-
-## ขอบเขตและข้อจำกัด
-
-- ใช้ข้อมูลกิจกรรม ผู้จัด และสถานที่สมมติสำหรับสาธิต วันที่ตัวอย่าง 24–26 ก.ย. 2569 แสดงเวลา Asia/Bangkok ไม่ใช่กิจกรรมที่จองได้จริง
-- แผนที่ใช้ Leaflet และ OpenStreetMap พร้อมพิกัดตัวอย่างในมหาวิทยาลัยแม่ฟ้าหลวง ไม่ได้อ่าน GPS ของผู้ชม และควรตรวจสอบพิกัดจริงก่อนใช้งาน
-- บัญชี การเข้าร่วม ความยินยอม ตัวกรอง และการตั้งเตือนอยู่ในหน่วยความจำของหน้านี้เท่านั้น ไม่มี cookies, localStorage หรือฐานข้อมูล
-- การแจ้งเตือนเป็น browser notification และ in-app reminder ที่ตั้งจากหน้าเว็บ ต้องเปิดหน้านี้ค้างไว้สำหรับ timer; ยังไม่มี push service หรือ email notification จริง
-- การยืนยันสำเร็จเป็นการจำลอง response ไม่ใช่ธุรกรรมบน server; ยังไม่มีระบบ email verification, access log, consent audit record, encryption, AI หรือระบบ backend/compliance/NFR
-- ใช้ tokens จาก design-system, คอลัมน์เดียวสูงสุด 480px, controls ขั้นต่ำ 44–48px, native modal dialog, focus/keyboard support และ live status; ใช้ Noto Sans Thai ถ้ามีในเครื่อง มิฉะนั้นใช้ system font เพื่อให้เปิดได้โดยไม่ดาวน์โหลดฟอนต์
-
-## ที่มา
-
-การตรวจโค้ด: JavaScript syntax ผ่าน; ตรวจ search/filter/empty state, consent gate, ป้องกันส่งซ้ำ, จำนวนคน, เส้นทางหน้าสำเร็จ/รายละเอียด และการเลือก consent ใหม่ด้วย Node และ DOM stub ผ่าน ตรวจลิงก์/asset ภายในครบ และ local HTTP ตอบ 200 ทั้งนี้ยังไม่ได้ทดสอบ layout, keyboard และ touch บนเบราว์เซอร์หรือมือถือจริง
-
-- [Feature list](feature-list.md), [User journey](user-journey.md), [Design system](design-system.md)
-- [Backlog](../01-requirements/backlog.md): 2.2–2.4, 3.1, 7.1–7.2, 8.1
-- [Requirement Spec](../01-requirements/01-spec/20260908-01-joingun.md): F3, Scope workflow 4, LR1 และ LR5; F1 เป็นเงื่อนไขก่อนเริ่ม journey
-- [rule.md](../../rule.md) และ [Legal traceability](../01-requirements/01-spec/20260908-02-legal-traceability.md): แยกวัตถุประสงค์ consent และไม่อ้างการยืนยันอีเมลเป็นการรับประกันความปลอดภัย
+See [server documentation](../../server/README.md) for schema, validation, API and tests, and [design system](design-system.md) for the UI style. Earlier [user journey](user-journey.md) describes the joining design, whereas the user's current MVP scope is posting.

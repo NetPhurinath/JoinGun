@@ -1,5 +1,11 @@
 # JoinGun — เอกสารเตรียมส่ง W5
 
+## Posting MVP — Node.js, Express and SQLite
+
+The posting MVP supports text posts and activity posts with a persistent SQLite database. From the repository root, run `npm ci` then `npm start`, and open `http://127.0.0.1:3000`. Requires Node.js 22.13+. Run `npm test` for API/database integration tests.
+
+See [server/README.md](server/README.md) for the API, schema, configuration and local-demo limitations. The backend now serves the existing UI through root `index.html`; its post composer and feed use SQLite-backed APIs. The earlier design notes below describe the original prototype, not the current posting-only backend scope.
+
 โครงสร้างนี้จัดตามคำสั่งส่งอาจารย์และสไลด์ W2–W4: ใช้ `.docs/` (มีจุดนำหน้า) สำหรับเอกสารทำงาน และ `rule.md` ที่ราก repo ส่วน `เอกสาร/` เก็บต้นฉบับและสไลด์อ้างอิง
 
 ## ไฟล์ปัจจุบัน
@@ -47,7 +53,7 @@ joingun/
 
 ## เปิด prototype
 
-เปิด `.docs/02-design/prototype/index.html` ที่ดาวน์โหลดมาบนเครื่องได้โดยตรง ไม่ต้องติดตั้ง dependency; ต้องเก็บ `styles.css` และ `app.js` ไว้ด้วยกัน ดูขั้นตอนทดลองและข้อจำกัดใน [prototype.md](.docs/02-design/prototype.md)
+Run `npm start` and open `http://127.0.0.1:3000` to use the existing UI with the backend. Direct file opening does not provide database access. See [prototype.md](.docs/02-design/prototype.md).
 
 ## ไฟล์ที่ยังต้องสร้าง
 
