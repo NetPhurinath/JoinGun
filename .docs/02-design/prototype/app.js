@@ -22,6 +22,28 @@ let createMarker = null;
 const defaultCampusLocation = {lat:20.0436,lng:99.8954};
 let createLocation = {...defaultCampusLocation};
 const showToast = text => { $('toast').textContent=text; $('toast').hidden=false; clearTimeout(showToast.timer); showToast.timer=setTimeout(() => { $('toast').hidden=true; }, 5000); announce(text); };
+const mapTileSources = [
+  'https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png',
+  'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png'
+];
+function addMapTiles(map, elementId) {
+  let sourceIndex = 0;
+  const loadSource = () => {
+    const layer = L.tileLayer(mapTileSources[sourceIndex], {attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+    layer.once('tileerror', () => {
+      map.removeLayer(layer);
+      sourceIndex += 1;
+      if (sourceIndex < mapTileSources.length) {
+        loadSource();
+        return;
+      }
+      const element = $(elementId);
+      element.classList.add('map-unavailable');
+      element.innerHTML = '<p>โหลดแผนที่ไม่สำเร็จในขณะนี้</p><p class="caption">โปรดเปิดจุดนัดหมายใน Google Maps แทน</p>';
+    });
+  };
+  loadSource();
+}
 
 function getFilteredActivities() {
   const query = state.query.trim().toLocaleLowerCase('th');
@@ -52,7 +74,7 @@ function openCreate() {
     createMapInstance?.remove();
     createLocation={...defaultCampusLocation};
     createMapInstance=L.map('create-map', {scrollWheelZoom:false}).setView([createLocation.lat,createLocation.lng], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap contributors'}).addTo(createMapInstance);
+    addMapTiles(createMapInstance, 'create-map');
     createMarker=L.marker([createLocation.lat,createLocation.lng], {draggable:true}).addTo(createMapInstance);
     const updateCreateLocation=event => { createLocation={lat:event.latlng.lat,lng:event.latlng.lng}; $('selected-coordinates').textContent=`พิกัดจุดนัดหมาย: ${createLocation.lat.toFixed(5)}, ${createLocation.lng.toFixed(5)}`; };
     createMapInstance.on('click',event => { createMarker.setLatLng(event.latlng); updateCreateLocation(event); });
@@ -65,8 +87,9 @@ function renderDetail(a) {
   const actionMarkup = joined
     ? `<p class="success-text">✓ เข้าร่วมแล้ว</p><button class="button secondary" data-action="reminder">${state.reminders.has(a.id)?'✓ เปิดเตือนแล้ว':'ตั้งเตือนก่อนเริ่ม 30 นาที'}</button><a class="button secondary" href="#feed">ดูกิจกรรมอื่น</a>`
     : `<p class="caption muted">ยังว่าง ${a.capacity-count(a)} ที่ · พร้อมมาเจอกันไหม?</p><button id="join-button" class="button primary" data-action="join">เข้าร่วมกิจกรรม</button>`;
-  main.innerHTML = `<a class="text-button back" href="#feed">← กลับหน้ากิจกรรม</a><div class="heading"><p class="caption muted">รายละเอียดกิจกรรม</p><h1 tabindex="-1">${a.title}</h1></div><div class="stack"><span class="badge">${categories[a.category]}</span><p>${a.description}</p></div><section class="section stack"><div class="host"><span class="avatar" aria-hidden="true">${a.host.slice(0,1)}</span><div class="stack"><p>จัดโดย ${a.host} <span class="muted caption">· ผู้จัดตัวอย่าง</span></p><span class="badge">✓ ยืนยันอีเมลมหาวิทยาลัยแล้ว</span></div></div><p class="notice">นัดพบในพื้นที่สาธารณะ และตรวจสอบรายละเอียดก่อนเข้าร่วม</p></section><section class="section card"><h2>รายละเอียดนัดหมาย</h2><p class="meta"><span class="symbol" aria-hidden="true">◷</span>${dateLabel(a)}</p><p class="meta"><span class="symbol" aria-hidden="true">⌖</span>${a.place}</p><p>${count(a)}/${a.capacity} คน · ว่าง ${a.capacity-count(a)} ที่</p></section><section class="section stack"><h2>จุดนัดหมาย · มหาวิทยาลัยแม่ฟ้าหลวง</h2><div id="map-${a.id}" class="map real-map" aria-label="แผนที่ OpenStreetMap จุดนัดหมาย ${a.place}"></div><p>${a.meeting}</p><p class="caption muted">แผนที่จริงจาก OpenStreetMap · พิกัดตัวอย่างในมหาวิทยาลัย</p></section><div class="action-bar">${actionMarkup}</div>`;
-  if (window.L) { mapInstance?.remove(); mapInstance = L.map(`map-${a.id}`, {scrollWheelZoom:false}).setView([a.lat,a.lng], 16); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap contributors'}).addTo(mapInstance); L.marker([a.lat,a.lng]).addTo(mapInstance).bindPopup(a.place).openPopup(); }
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}`;
+  main.innerHTML = `<a class="text-button back" href="#feed">← กลับหน้ากิจกรรม</a><div class="heading"><p class="caption muted">รายละเอียดกิจกรรม</p><h1 tabindex="-1">${a.title}</h1></div><div class="stack"><span class="badge">${categories[a.category]}</span><p>${a.description}</p></div><section class="section stack"><div class="host"><span class="avatar" aria-hidden="true">${a.host.slice(0,1)}</span><div class="stack"><p>จัดโดย ${a.host} <span class="muted caption">· ผู้จัดตัวอย่าง</span></p><span class="badge">✓ ยืนยันอีเมลมหาวิทยาลัยแล้ว</span></div></div><p class="notice">นัดพบในพื้นที่สาธารณะ และตรวจสอบรายละเอียดก่อนเข้าร่วม</p></section><section class="section card"><h2>รายละเอียดนัดหมาย</h2><p class="meta"><span class="symbol" aria-hidden="true">◷</span>${dateLabel(a)}</p><p class="meta"><span class="symbol" aria-hidden="true">⌖</span>${a.place}</p><p>${count(a)}/${a.capacity} คน · ว่าง ${a.capacity-count(a)} ที่</p></section><section class="section stack"><h2>จุดนัดหมาย · มหาวิทยาลัยแม่ฟ้าหลวง</h2><div id="map-${a.id}" class="map real-map" aria-label="แผนที่ OpenStreetMap จุดนัดหมาย ${a.place}"></div><a class="button secondary" href="${googleMapsUrl}" target="_blank" rel="noreferrer">เปิดจุดนี้ใน Google Maps</a><p>${a.meeting}</p><p class="caption muted">แผนที่จริงจาก OpenStreetMap · พิกัดตัวอย่างในมหาวิทยาลัย</p></section><div class="action-bar">${actionMarkup}</div>`;
+  if (window.L) { mapInstance?.remove(); mapInstance = L.map(`map-${a.id}`, {scrollWheelZoom:false}).setView([a.lat,a.lng], 16); addMapTiles(mapInstance, `map-${a.id}`); L.marker([a.lat,a.lng]).addTo(mapInstance).bindPopup(a.place).openPopup(); }
 }
 function setAuthMode(mode) {
   state.authMode=mode;

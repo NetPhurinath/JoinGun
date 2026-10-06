@@ -91,6 +91,7 @@ input:not([type=checkbox]),select,textarea { min-height:var(--size-control); bor
 .map-pin { font-size:var(--text-title); color:var(--color-primary); }
 .real-map { height:240px; min-height:240px; padding:0; overflow:hidden; }
 .create-map { height:210px; min-height:210px; padding:0; overflow:hidden; }
+.map-unavailable { display:grid; place-content:center; text-align:center; gap:var(--space-2); padding:var(--space-4); }
 .leaflet-container { font:inherit; }
 .map-label { background:var(--color-surface); padding:var(--space-2) var(--space-3); border-radius:var(--radius-control); }
 .action-bar { position:sticky; bottom:0; z-index:var(--layer-sticky); background:var(--color-surface); box-shadow:var(--shadow-raised); border-radius:var(--radius-card) var(--radius-card) 0 0; padding:var(--space-4); padding-bottom:calc(var(--space-4) + env(safe-area-inset-bottom)); margin-top:var(--space-6); }
