@@ -164,7 +164,7 @@ $('auth-switch').addEventListener('click',()=>setAuthMode(state.authMode==='logi
 $('auth-form').addEventListener('submit',event=>{
   event.preventDefault();
   const email=$('auth-email').value.trim().toLowerCase();
-  if (!email.endsWith('@mfu.ac.th')) { $('auth-error').textContent='กรุณาใช้อีเมลมหาวิทยาลัย เช่น name@mfu.ac.th'; $('auth-error').hidden=false; return; }
+  if (!email.endsWith('@lamduan.mfu.ac.th')) { $('auth-error').textContent='กรุณาใช้อีเมลมหาวิทยาลัย เช่น name@lamduan.mfu.ac.th'; $('auth-error').hidden=false; return; }
   state.user={email}; $('auth-dialog').close(); showToast(state.authMode==='login'?'เข้าสู่ระบบสำเร็จ':'สมัครสมาชิกสำเร็จ'); history.pushState(null,'','#feed'); route();
 });
 $('create-form').addEventListener('submit',event=>{
