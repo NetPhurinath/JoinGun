@@ -234,8 +234,8 @@ export function openDatabase(filename) {
   }
   for (const [table, name, definition] of [['posts', 'deleted_at', 'TEXT'], ['posts', 'updated_at', 'TEXT'], ['users', 'deleted_at', 'TEXT'],
     ['users', 'bio', "TEXT NOT NULL DEFAULT ''"],
-    // Who may see the activities a person joined (F5): everyone, friends only, or only the person.
-    ['users', 'history_visibility', "TEXT NOT NULL DEFAULT 'friends' CHECK(history_visibility IN ('public','friends','private'))"],
+    // Who may see the activities a person joined (F5): everyone, friends only, or only the person (default since 2026-10-28).
+    ['users', 'history_visibility', "TEXT NOT NULL DEFAULT 'private' CHECK(history_visibility IN ('public','friends','private'))"],
     ['users', 'role', "TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user','moderator'))"],
     ['users', 'suspended_at', 'TEXT'], ['users', 'suspended_reason', "TEXT NOT NULL DEFAULT ''"],
     // Notification settings (backlog 4.2).

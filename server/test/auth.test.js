@@ -9,7 +9,7 @@ const count = (store, sql, ...args) => store.db.prepare(sql).get(...args).n;
 test('sign-up stores no plaintext email, records terms acceptance and auth logs, and sessions work', async t => {
   const { store, json, cookie, config } = await fixture(t);
   const me = await (await json('/api/me', 'GET', undefined, cookie)).json();
-  assert.deepEqual({ ...me, id: undefined }, { id: undefined, displayName: 'Student One', username: 'student_1', year: null, interests: ['sport'], participationConsent: false, needs: null, bio: '', role: 'user', historyVisibility: 'friends', suspended: null });
+  assert.deepEqual({ ...me, id: undefined }, { id: undefined, displayName: 'Student One', username: 'student_1', year: null, interests: ['sport'], participationConsent: false, needs: null, bio: '', role: 'user', historyVisibility: 'private', suspended: null });
 
   // The address appears nowhere in the database as plain text; the encrypted copy decrypts back to it.
   const dump = JSON.stringify(['users', 'user_emails', 'login_codes', 'sessions', 'terms_acceptances', 'auth_logs'].map(table => store.db.prepare(`SELECT * FROM ${table}`).all()));

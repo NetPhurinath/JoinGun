@@ -46,8 +46,8 @@ function privacySection(user) {
     <h2 id="privacy-title">${icon('lock', { size: 'sm' })}ใครเห็นประวัติการเข้าร่วมของฉัน</h2>
     <div class="stack-tight" role="radiogroup" aria-labelledby="privacy-title">
       ${option('public', 'ทุกคนที่เข้าสู่ระบบ', 'ผู้ใช้ JoinGun ทุกคนเห็นกิจกรรมที่คุณเข้าร่วมบนโปรไฟล์')}
-      ${option('friends', 'เฉพาะเพื่อน (ค่าเริ่มต้น)', 'เฉพาะคนที่เป็นเพื่อนกับคุณ')}
-      ${option('private', 'เฉพาะฉัน', 'ไม่มีใครเห็น นอกจากคุณ')}
+      ${option('friends', 'เฉพาะเพื่อน', 'เฉพาะคนที่เป็นเพื่อนกับคุณ')}
+      ${option('private', 'เฉพาะฉัน (ค่าเริ่มต้น)', 'ไม่มีใครเห็น นอกจากคุณ')}
     </div>
     <p class="caption muted">ไม่ว่าเลือกแบบไหน ผู้จัดและผู้เข้าร่วมกิจกรรมเดียวกันยังเห็นชื่อคุณในรายชื่อผู้เข้าร่วมของกิจกรรมนั้น</p>
   </section>`;

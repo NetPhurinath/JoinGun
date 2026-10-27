@@ -20,7 +20,7 @@ export function createAccounts(db, security, config) {
     interests: profile.interests,
     bio: profile.bio,
     role: row.role ?? 'user',
-    historyVisibility: row.history_visibility ?? 'friends',
+    historyVisibility: row.history_visibility ?? 'private',
     // A moderator's suspension: the person can still read, change settings, download data and ask for review.
     suspended: row.suspended_at ? { at: row.suspended_at, reason: row.suspended_reason } : null,
     // Whether the separate consent to keep participation history (LR1) has been given, so the join sheet asks once.
@@ -61,7 +61,8 @@ export function createAccounts(db, security, config) {
       const id = randomUUID(), time = now();
       db.exec('BEGIN IMMEDIATE');
       try {
-        db.prepare("INSERT INTO users (id, status, created_at, updated_at) VALUES (?, 'pending', ?, ?)").run(id, time, time);
+        // History is private by default (F5, decision 2026-10-28); set here because older databases keep 'friends' as the column default.
+        db.prepare("INSERT INTO users (id, status, created_at, updated_at, history_visibility) VALUES (?, 'pending', ?, ?, 'private')").run(id, time, time);
         db.prepare('INSERT INTO user_emails VALUES (?, ?, ?, ?)').run(id, emailHash, security.encrypt(email), time);
         db.exec('COMMIT');
       } catch (error) { db.exec('ROLLBACK'); throw error; }

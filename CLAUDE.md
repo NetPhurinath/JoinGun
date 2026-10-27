@@ -38,12 +38,12 @@ Read this first in a new session to know where the work stands. The full plan (i
 
 | Step | Goal | Status |
 | --- | --- | --- |
-| 1. Repo ready | Commit pending work, pick one Git remote, fix README status, fill the proposal's stack sections | Partly done. Nothing is committed yet (the user commits later, on their call). Remote choice and proposal sections 5.2, 5.3 and 7 not confirmed; README still says the diagrams are not made. |
+| 1. Repo ready | Commit pending work, pick one Git remote, fix README status, fill the proposal's stack sections | Partly done. Commit `8064aab` (pilot build 0.3.0, 2026-10-27) is on `origin/main` and `origin/pilot-0.3.0` (`origin` = `NetPhurinath/JoinGun`). Not yet committed: `.docs/03-testing/` and the slides moved to `เอกสาร/slide/`. Open: the team still has to confirm the remote (README used to name `maefahluang-uni/Join-Gun`) and fill proposal sections 5.2, 5.3 and 7; `.docs/02-design/diagrams.md` (D1–D4 in Mermaid, drafted from the code on 2026-10-28) needs team review; the four PNGs are older and need redrawing. README status fixed 2026-10-28. |
 | 2. Own frontend in `web/` | Move feed, create, filters, detail and map out of the prototype | Done |
 | 3. Accounts | Email-code sign-in, sessions, terms records, auth logs | Done (any `.ac.th` address, Gmail SMTP; tested with a real send by the user on 2026-10-14) |
 | 4. Join and leave | Participants, capacity in one transaction, participation consent, audit logs | Done |
 | 5. Safety and PDPA minimum | Edit/delete posts, report/block, consent withdrawal, data download, account deletion with 90-day archive | Done 2026-10-15. `npm test` on the Tech Lead's machine: 33 pass, 1 skipped until `npm install` adds `@zip.js/zip.js`. Not checked: opening the ZIP in 7-Zip, maps when editing, real phones. |
-| 6. Production readiness | helmet/security headers, rate limits, env config, binding 0.0.0.0, log retention, daily SQLite backup, disk or field encryption, GitHub Actions running `npm test`, full test on a real phone | Mostly done 2026-10-16: headers (no helmet), rate limits, config checks, `HOST=0.0.0.0` support, daily `VACUUM INTO` backup, GitHub Actions. `npm test`: 47 pass (2026-10-26). Field encryption for year/interests/bio added 2026-10-26; `npm run perf` added. Open: log retention schedule (PO), disk encryption (with hosting), real-phone test. |
+| 6. Production readiness | helmet/security headers, rate limits, env config, binding 0.0.0.0, log retention, daily SQLite backup, disk or field encryption, GitHub Actions running `npm test`, full test on a real phone | Mostly done 2026-10-16: headers (no helmet), rate limits, config checks, `HOST=0.0.0.0` support, daily `VACUUM INTO` backup, GitHub Actions. `npm test`: 47 pass (2026-10-26). Field encryption for year/interests/bio added 2026-10-26; `npm run perf` added. Playwright browser tests (`npm run test:e2e`, CI job `e2e`) added 2026-10-28: 4 of 5 pass; sign-up fails on a phone-size screen because the welcome page is wider than the screen (TC-ACC-09, not fixed). Open: log retention schedule (PO), disk encryption (with hosting), real-phone test. |
 | 7. Deploy | Hosting with a persistent disk (SQLite), HTTPS, domain | Waiting for the Tech Lead's hosting and budget decision |
 | 8. Pilot | Small group test, QA on real phones, collect feedback as pain-point evidence | Not started. Android project ready (`npm run cap:open`); needs Android Studio to build. |
 | 9. Next features | Reminders (F4), friends, AI recommendations (F6, with LR4/LR5) | Built early on 2026-10-16 (see `DECISIONS.md`); needs team review and pilot feedback. Web Push not built. |
@@ -64,6 +64,6 @@ Open questions: where to host and the monthly budget (Tech Lead); whether the fi
 ### Not yet present
 - `.claude/agents/requirement-writer.md`
 - `.claude/skills/audit-backlog/SKILL.md`
-- Interview evidence log
+- Interview records. The evidence log (`.docs/01-requirements/evidence-log.md`) holds only a 5-response questionnaire from 2026-09-07/08; no interviews, direct pain quotes or Path B research are logged yet.
 
 Do not reference these as if they exist. Offer to create them only when the user asks.

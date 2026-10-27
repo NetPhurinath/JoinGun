@@ -67,9 +67,12 @@ test('activity history follows the owner privacy setting (F5)', async t => {
   await f.json(`/api/friends/requests/${requestId}/accept`, 'POST', {}, friend);
 
   const history = cookie => f.json('/api/users/student_1/history', 'GET', undefined, cookie);
-  assert.equal((await history(friend)).status, 200, 'default: friends');
+  assert.equal((await history(friend)).status, 403, 'default: only me');
   assert.equal((await history(stranger)).status, 403);
   assert.equal((await body(await history(f.cookie))).items[0].id, created.id);
+  assert.equal((await f.json('/api/me/privacy', 'PUT', { historyVisibility: 'friends' }, f.cookie)).status, 200);
+  assert.equal((await history(friend)).status, 200);
+  assert.equal((await history(stranger)).status, 403);
   assert.equal((await f.json('/api/me/privacy', 'PUT', { historyVisibility: 'private' }, f.cookie)).status, 200);
   assert.equal((await history(friend)).status, 403);
   await f.json('/api/me/privacy', 'PUT', { historyVisibility: 'public' }, f.cookie);

@@ -71,7 +71,9 @@ Meeting locations require a separate explicit opt-in on each activity post under
 
 ## Verification
 
-`npm test` uses real HTTP requests to Express and real SQLite databases. Tests cover both post types, persistence after reopening, consent validation, malformed requests, field limits, SQL-like input, pagination under new inserts, private-file access and transactional rollback. Tests also cover `web/` routes and hidden private paths, optional map/category fields, SQL-side category/date/search filters with totals, the 2–50 capacity limit and migration of a database created by the earlier MVP. Browser checks confirmed that the original feed displays existing SQLite posts and the composer switches between text and activity fields. Publishing was tested through real HTTP integration tests; a full browser submission flow and real mobile devices have not been verified.
+`npm test` uses real HTTP requests to Express and real SQLite databases. Tests cover both post types, persistence after reopening, consent validation, malformed requests, field limits, SQL-like input, pagination under new inserts, private-file access and transactional rollback. Tests also cover `web/` routes and hidden private paths, optional map/category fields, SQL-side category/date/search filters with totals, the 2–50 capacity limit and migration of a database created by the earlier MVP. Browser checks confirmed that the original feed displays existing SQLite posts and the composer switches between text and activity fields. Publishing was tested through real HTTP integration tests; real mobile devices have not been verified.
+
+`npm run test:e2e` (Playwright, added 2026-10-28) drives the real UI in Chromium on a phone-size screen against `tests/e2e/server.js`, a separate server with an in-memory database and seed activities that never opens `data/`. First run: `npx playwright install chromium`. It covers the core journey (filter, open, join with consent), a full activity, the unticked location consent, reload persistence and delete-with-confirm (cancel), and sign-up through the UI. On 2026-10-28, 4 of 5 pass; sign-up fails on the phone-size screen because the welcome page is wider than the screen (test plan TC-ACC-09).
 
 Implementation references: [Express API](https://expressjs.com/en/api/) and [Node.js SQLite API](https://nodejs.org/api/sqlite.html).
 
@@ -165,7 +167,7 @@ Added together for the "complete version for real testing" request. Choices made
 | GET | `/api/users?q=` | — | Up to 20 active accounts whose username or display name contains `q`, with `relation`. Needs an account. Email is never searchable. |
 | GET | `/api/users/:username` | — | Profile: name, username, bio, year and interests (signed-in viewers only), join date, stats, `relation` (`self`, `friends`, `incoming`, `outgoing`, `none`), `requestId`, `blockedByMe`, `historyVisible`. |
 | GET | `/api/users/:username/posts` | — | That person's posts, same paging and filters as `/api/posts`. |
-| GET | `/api/users/:username/history` | — | Activities the person joined or hosts. 403 `history-hidden` unless the owner's `historyVisibility` allows the viewer: `public` (any signed-in user), `friends` (default) or `private`. |
+| GET | `/api/users/:username/history` | — | Activities the person joined or hosts. 403 `history-hidden` unless the owner's `historyVisibility` allows the viewer: `public` (any signed-in user), `friends` or `private` (default for accounts created since 2026-10-28). |
 | PUT | `/api/me/privacy` | `{historyVisibility}` | The new setting. |
 | PUT | `/api/me` | adds optional `bio` (up to 160 characters) | |
 | GET | `/api/friends` | — | `{items, incoming, outgoing}`. |
