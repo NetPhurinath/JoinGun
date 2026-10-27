@@ -196,10 +196,11 @@ Recruitment: posts in club and faculty groups, with a short screener that only c
 
 ### 5.3 Ethics and personal data of participants
 
-- Informed consent (PDPA) before each session: a participant information sheet and consent form in Thai giving the purpose, what is recorded, how long it is kept, and the right to stop at any time. Ask separately before recording audio, video or photos.
-- Participants are known only by code (U01…). Names and contact details stay in a separate sign-up sheet that only QA can open, deleted when the course ends.
-- Record the **screen and voice only**, no faces, unless the participant agrees to a photo for the final presentation. Questionnaires collect no name or email.
+- Informed consent (PDPA) before each session: a participant information sheet and consent form in Thai giving the purpose, what is recorded, how long it is kept, and the right to stop at any time. Ask separately before recording audio or video.
+- Participants are known only by code (U01…). Names, contact details and screener answers stay in a separate sign-up sheet that only QA can open.
+- Record **screen video and voice only**: no faces and no photos of participants. This screen recording is the "photos or video of testing" evidence the *Post-Midterm Plan* deck asks for. Questionnaires collect no name or email.
 - No raw recordings or identifiable notes go into the Git repository; only aggregated results go into `test-report.md`.
+- **Deletion date.** The deck asks teams to keep consent forms, the raw Excel sheet and photos or video for the instructor to check. Names, contact details, screener answers, screen and audio recordings and signed consent forms are therefore kept until the instructor has checked them, then deleted by **31 Dec 2026** (31 ธ.ค. 2569), the same date written in the consent form (part A) and screener (part G) of [uat-materials-th.md](uat-materials-th.md). The raw Excel sheet holds no names or contact details and is not deleted.
 - Until JoinGun runs on HTTPS (delivery step 7), participants **do not enter their own email or personal data**. They use test accounts prepared by the team on a team phone, and any sign-up task uses a team-controlled `.ac.th` test address (the moderator reads the code). Once HTTPS hosting is approved by the Tech Lead, participants may use their own email on their own phone. The UAT database is separate from any pilot database and is wiped after analysis.
 
 ### 5.4 Environment and test data
@@ -213,7 +214,7 @@ Recruitment: posts in club and faculty groups, with a short screener that only c
 
 ### 5.5 Session script (about 30–35 minutes)
 
-Follows the course deck's session format.
+Follows the course deck's session format (intro 3', old way 5', tasks and think-aloud 10–15', questionnaires 3–6', interview 5'). The T1–T4 limits add up to 5 minutes per condition (§5.6), so the old-way block stays within 5 minutes, and the JoinGun block spends at most 5 minutes on T1–T4 and the rest on T5–T10.
 
 | Time | Step |
 | --- | --- |
@@ -233,10 +234,12 @@ Time limits are for scoring only; the participant is not told. A task is **succe
 
 | Task | Scenario given to the participant (Set A shown) | Success criterion | Limit | Traces to |
 | --- | --- | --- | --- | --- |
-| T1 Find | "You want to play badminton this Saturday after 17:00. Find a game that still has places." | Correct activity identified | 3 min | F3, 7.2, pain "missed opportunities" |
-| T2 Join | "Join that game and tell me how many places are left after you." | Before: message sent to the organiser and correct count stated. After: joined (status "เข้าร่วมแล้ว") and correct count stated | 3 min | 2.4, LR1, pain "difficult coordination" |
-| T3 Locate | "Show me exactly where you will meet and how you would get there." | Meeting point shown on a map and a route opened | 3 min | F2, 3.1, 3.2, pain "can't find meeting location" |
-| T4 Remember | "Make sure you will be reminded one hour before it starts." | A reminder for the right time is set (JoinGun reminder setting or calendar entry) | 2 min | F4, 4.1, 4.2 |
+| T1 Find | "You want to play badminton this Saturday after 17:00. Find a game that still has places." | Correct activity identified | 2 min | F3, 7.2, pain "missed opportunities" |
+| T2 Join | "Join that game and tell me how many places are left after you." | Before: message sent to the organiser and correct count stated. After: joined (status "เข้าร่วมแล้ว") and correct count stated | 1 min | 2.4, LR1, pain "difficult coordination" |
+| T3 Locate | "Show me exactly where you will meet and how you would get there." | Meeting point shown on a map and a route opened | 1 min | F2, 3.1, 3.2, pain "can't find meeting location" |
+| T4 Remember | "Make sure you will be reminded one hour before it starts." | A reminder for the right time is set (JoinGun reminder setting or calendar entry) | 1 min | F4, 4.1, 4.2 |
+
+The T1–T4 limits total 5 minutes and are the same in both conditions, matching the deck's 5-minute old-way block. The short limits may cause more timeouts in the "before" condition, so timeouts are counted per condition and noted as a limitation in the report (§11).
 
 **Optional tasks T5–T10 (JoinGun only; only if time allows, not counted in the targets)**
 
@@ -380,7 +383,7 @@ Dependencies: real-email sign-up by participants and the final NFR1/NFR3/NFR4 nu
 | `.docs/03-testing/test-report.md` | Per test case: what it checks, pass/fail, date run, environment, the acceptance criterion it maps to; NFR measurements; UAT results (before/after, SUS, TAM), problems found and fixed; known gaps | 10 Nov |
 | P3 User Evidence Log (portfolio) | Who was tested with (U-codes, year, faculty), when, and what was found; links to the evidence below | 10 Nov |
 | P4 Impact Metrics (portfolio) | Before/after task results, SUS, TAM; plus one metric on AI's impact on the team's SDLC | 10 Nov |
-| Raw evidence (outside Git if it contains personal data) | Signed consent forms, the raw Excel sheet (one row per user), observation sheets, interview notes, photos or video taken with permission | Kept for the instructor to check |
+| Raw evidence (outside Git if it contains personal data) | Signed consent forms, the raw Excel sheet (one row per user), observation sheets, interview notes, screen and audio recordings taken with permission | Kept for the instructor to check, then identifiable items deleted by 31 Dec 2026 (§5.3) |
 | UAT materials | Consent form, screener, observation sheet, SUS/TAM forms, "before" kit description ([uat-materials-th.md](uat-materials-th.md)) | Phase 1 |
 | `tests/e2e/*.spec.js` | Playwright tests, each title starting with its requirement ID (e.g. `2.4 LR1 — core journey…`) | Exists since 2026-10-28 (6 tests) |
 
@@ -395,6 +398,7 @@ Dependencies: real-email sign-up by participants and the final NFR1/NFR3/NFR4 nu
 | F4 has no server-sent push | Reminders reach a closed app only through phone-scheduled notifications | Tested as built; push listed as a known gap |
 | Short preparation (29 Oct – 3 Nov) for a 4 Nov round | Recruitment or materials may not be ready | Book users from 28 Oct; pilot on 2 Nov; Round 2 on 7–8 Nov can absorb no-shows |
 | Small sample (10–12) | Statistics are indicative | Report means, medians, intervals and qualitative findings together |
+| Short time limits (T1–T4 total 5 min, per the deck) | "Before" tasks may time out more than in real life, overstating the before/after difference | Same limits in both conditions; timeouts reported per condition; limits checked in the pilot session (U00) |
 | Fixed order: old way first, then JoinGun | Learning effect may make JoinGun look faster | Two equivalent scenario sets; noted as a limitation in the report |
 | "Before" kit is staged, not the participant's own groups | Baseline may be easier or harder than real life | Pre-session questionnaire on real habits; noted as a limitation |
 | Moderator is a team member | Bias towards JoinGun | Fixed script, no hints, a second person takes notes |
