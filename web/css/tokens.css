@@ -1,0 +1,89 @@
+/* Design tokens from .docs/02-design/design-system.md, plus app-shell tokens for the phone-style layout (one
+   480px column on every screen, bottom tab bar) and a dark theme. Components must reference these. */
+:root {
+  color-scheme: light dark;
+  --color-primary: #1D4ED8;
+  --color-primary-pressed: #1E40AF;
+  --color-primary-soft: #EFF6FF;
+  --color-background: #F8FAFC;
+  --color-page: #E2E8F0;          /* around the phone frame on wide screens */
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F1F5F9;
+  --color-text: #0F172A;
+  --color-text-muted: #475569;
+  --color-on-primary: #FFFFFF;
+  --color-border: #CBD5E1;
+  --color-divider: #E2E8F0;
+  --color-control-border: #64748B;
+  --color-success: #166534;
+  --color-success-soft: #F0FDF4;
+  --color-danger: #B91C1C;
+  --color-danger-soft: #FEF2F2;
+  --color-warning: #92400E;
+  --color-warning-soft: #FFFBEB;
+  --color-disabled: #E2E8F0;
+  --color-focus: #1D4ED8;
+  --color-overlay: rgb(15 23 42 / 48%);
+  --color-glass: rgb(255 255 255 / 85%);
+
+  /* Category banners on activity cards (sport / study / cafe) */
+  --cat-sport: linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%);
+  --cat-study: linear-gradient(135deg, #7C3AED 0%, #6366F1 100%);
+  --cat-cafe: linear-gradient(135deg, #C2410C 0%, #F59E0B 100%);
+  --cat-text: linear-gradient(135deg, #334155 0%, #64748B 100%);
+
+  --font-family: "Noto Sans Thai", "Leelawadee UI", "Sarabun", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --text-display: 40px; --line-display: 52px;       /* welcome headline, phones */
+  --text-display-wide: 56px; --line-display-wide: 68px; /* welcome headline, from 768px */
+  --text-title: 24px;   --line-title: 36px;
+  --text-heading: 20px; --line-heading: 30px;
+  --text-body: 16px;    --line-body: 24px;
+  --text-caption: 14px; --line-caption: 22px;
+  --text-small: 13px;   --line-small: 18px;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px;
+  --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px;
+
+  --radius-control: 12px; --radius-card: 16px; --radius-pill: 999px;
+  --size-control: 48px; --size-touch-min: 44px;
+  --size-icon: 24px; --size-checkbox: 20px; --size-map-min: 180px;
+  --size-avatar: 44px; --size-avatar-lg: 120px;
+  --layout-content-max: 480px; --breakpoint-wide: 768px;
+  --size-tabbar: 60px;
+  --border-width: 1px; --focus-width: 2px; --focus-offset: 2px;
+  --shadow-raised: 0 4px 16px rgb(15 23 42 / 12%);
+  --shadow-soft: 0 1px 3px rgb(15 23 42 / 8%);
+  --motion-fast: 150ms ease-out;
+  --layer-sticky: 10; --layer-overlay: 20; --layer-dialog: 30;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-primary: #3B82F6;
+    --color-primary-pressed: #2563EB;
+    --color-primary-soft: #172554;
+    --color-background: #000000;
+    --color-page: #15181C;
+    --color-surface: #0B0F14;
+    --color-surface-hover: #161B22;
+    --color-text: #E7E9EA;
+    --color-text-muted: #94A3B8;
+    --color-border: #2F3336;
+    --color-divider: #1F2328;
+    --color-control-border: #64748B;
+    --color-success: #4ADE80;
+    --color-success-soft: #052E16;
+    --color-danger: #F87171;
+    --color-danger-soft: #450A0A;
+    --color-warning: #FBBF24;
+    --color-warning-soft: #451A03;
+    --color-disabled: #1F2937;
+    --color-focus: #60A5FA;
+    --color-overlay: rgb(91 112 131 / 40%);
+    --color-glass: rgb(0 0 0 / 70%);
+    --shadow-raised: 0 0 15px rgb(255 255 255 / 10%), 0 0 3px 1px rgb(255 255 255 / 8%);
+  }
+}

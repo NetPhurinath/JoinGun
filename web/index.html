@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="JoinGun — หาเพื่อนทำกิจกรรมในมหาวิทยาลัย">
+  <meta name="theme-color" content="#1D4ED8">
+  <title>JoinGun</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" defer></script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">ข้ามไปเนื้อหา</a>
+  <div class="shell">
+    <div class="column">
+      <div id="ptr" class="ptr" aria-hidden="true"><span class="ptr-spinner"></span></div>
+      <main id="main" tabindex="-1"></main>
+      <p class="demo-banner" id="demo-banner">เวอร์ชันทดสอบ: ใช้ทดลองกับกลุ่มเล็ก โปรดอย่าใส่ข้อมูลส่วนตัวที่ไม่จำเป็นในโพสต์</p>
+    </div>
+    <nav class="tabbar" id="tabbar" aria-label="เมนูหลัก"></nav>
+  </div>
+
+  <dialog id="filter-dialog" class="sheet" aria-labelledby="filter-title">
+    <form id="filter-form" class="stack" method="dialog" novalidate>
+      <div class="sheet-heading">
+        <h2 id="filter-title">ตัวกรอง</h2>
+        <button class="icon-button" type="button" data-close aria-label="ปิดตัวกรอง">✕</button>
+      </div>
+      <fieldset class="stack-tight">
+        <legend>หมวดกิจกรรม</legend>
+        <div class="chip-group">
+          <label class="chip"><input type="radio" name="category" value="all" checked><span>ทุกโพสต์</span></label>
+          <label class="chip"><input type="radio" name="category" value="sport"><span>กีฬา</span></label>
+          <label class="chip"><input type="radio" name="category" value="study"><span>อ่านหนังสือ</span></label>
+          <label class="chip"><input type="radio" name="category" value="cafe"><span>คาเฟ่</span></label>
+          <label class="chip"><input type="radio" name="category" value="text"><span>ข้อความทั่วไป</span></label>
+        </div>
+      </fieldset>
+      <div class="field">
+        <label for="filter-date">วันที่ว่าง</label>
+        <input id="filter-date" name="date" type="date">
+        <p class="help">กิจกรรมใช้วันที่เริ่มกิจกรรม ส่วนโพสต์ข้อความใช้วันที่เผยแพร่</p>
+      </div>
+      <label class="switch-row"><span>เฉพาะกิจกรรมที่ยังไม่เริ่มและยังมีที่ว่าง</span><input type="checkbox" name="open"></label>
+      <button class="button button-primary" type="submit" value="apply">แสดงกิจกรรม</button>
+      <button class="button button-outline" type="button" id="filter-reset">ล้างตัวกรอง</button>
+    </form>
+  </dialog>
+
+  <dialog id="create-dialog" class="sheet" aria-labelledby="create-title">
+    <form id="create-form" class="stack" novalidate>
+      <div class="sheet-heading">
+        <button class="icon-button" type="button" data-close aria-label="ปิดการสร้างโพสต์">✕</button>
+        <h2 id="create-title">สร้างโพสต์</h2>
+        <button id="publish-top" class="button button-primary button-small" type="submit">เผยแพร่</button>
+      </div>
+      <div class="type-switch" role="radiogroup" aria-label="ประเภทโพสต์" id="type-switch">
+        <label><input type="radio" name="post-type" value="activity" checked><span>กิจกรรม</span></label>
+        <label><input type="radio" name="post-type" value="text"><span>ข้อความทั่วไป</span></label>
+      </div>
+      <input type="hidden" id="post-type" value="activity">
+      <div class="field">
+        <label for="post-content">ข้อความ / รายละเอียด</label>
+        <textarea id="post-content" rows="4" maxlength="5000" required placeholder="เช่น มือใหม่มาได้ เอาไม้แบดกับน้ำมาด้วย"></textarea>
+        <span class="help counter" id="content-counter">0 / 5,000</span>
+      </div>
+      <fieldset id="activity-fields" class="stack">
+        <legend class="visually-hidden">รายละเอียดกิจกรรม</legend>
+        <div class="field">
+          <label for="activity-title">ชื่อกิจกรรม</label>
+          <input id="activity-title" type="text" maxlength="120" required placeholder="เช่น ตีแบดหลังเลิกเรียน">
+        </div>
+        <fieldset class="stack-tight">
+          <legend>หมวดกิจกรรม</legend>
+          <div class="chip-group" id="activity-category-group">
+            <label class="chip"><input type="radio" name="activity-category" value="sport" checked><span>🏸 กีฬา</span></label>
+            <label class="chip"><input type="radio" name="activity-category" value="study"><span>📚 อ่านหนังสือ</span></label>
+            <label class="chip"><input type="radio" name="activity-category" value="cafe"><span>☕ คาเฟ่</span></label>
+          </div>
+          <input type="hidden" id="activity-category" value="sport">
+        </fieldset>
+        <div class="field-row">
+          <div class="field">
+            <label for="activity-date">วันที่</label>
+            <input id="activity-date" type="date" required>
+          </div>
+          <div class="field">
+            <label for="activity-time">เวลาเริ่ม</label>
+            <input id="activity-time" type="time" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="activity-place">สถานที่ในมหาวิทยาลัย</label>
+          <input id="activity-place" type="text" maxlength="300" required placeholder="เช่น ทางเข้าโรงยิมมหาวิทยาลัย">
+        </div>
+        <div class="field">
+          <span class="label" id="create-map-label">ปักหมุดจุดนัดหมาย (ไม่บังคับ)</span>
+          <div class="row">
+            <div class="search-box" style="flex:1"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input id="place-search" type="search" maxlength="100" autocomplete="off" placeholder="ค้นหาสถานที่บนแผนที่" aria-describedby="place-search-help"></div>
+            <button id="place-search-button" class="button button-outline button-small" type="button">ค้นหา</button>
+          </div>
+          <p id="place-search-help" class="help">ค้นหาผ่าน OpenStreetMap ระบบส่งเฉพาะคำค้นหา ไม่ส่งตำแหน่งของคุณ</p>
+          <ul id="place-results" class="place-results" hidden></ul>
+          <div id="create-map" class="map" role="application" aria-labelledby="create-map-label"></div>
+          <p id="pin-status" class="help">แตะบนแผนที่เพื่อปักหมุด ระบบไม่อ่านตำแหน่งปัจจุบันของคุณ</p>
+          <button id="pin-clear" class="text-button" type="button" hidden>ลบหมุด</button>
+        </div>
+        <div class="field">
+          <label for="activity-meeting">รายละเอียดจุดนัดพบ (ไม่บังคับ)</label>
+          <textarea id="activity-meeting" rows="2" maxlength="1000" placeholder="เช่น เจอกันที่ม้านั่งหน้าทางเข้า"></textarea>
+        </div>
+        <div class="field">
+          <label for="activity-capacity">จำนวนผู้เข้าร่วมทั้งหมด รวมผู้จัด</label>
+          <input id="activity-capacity" type="number" inputmode="numeric" min="2" max="50" step="1" value="6" required>
+          <p class="help">2 ถึง 50 คน</p>
+        </div>
+        <label class="checkbox-row">
+          <input id="location-consent" type="checkbox" required>
+          <span>ยินยอมให้บันทึกและแสดงสถานที่นัดหมายและหมุดบนแผนที่ในโพสต์นี้ เพื่อให้ผู้สนใจหาจุดนัดพบได้</span>
+        </label>
+      </fieldset>
+      <p id="create-error" class="error-message" role="alert" hidden></p>
+      <button id="publish-button" class="button button-primary" type="submit">เผยแพร่โพสต์</button>
+    </form>
+  </dialog>
+
+  <dialog id="auth-dialog" class="sheet auth-sheet">
+    <div id="auth-body" class="auth-body"></div>
+  </dialog>
+
+  <dialog id="join-dialog" class="sheet" aria-labelledby="join-title">
+    <div id="join-body" class="stack"></div>
+  </dialog>
+
+  <dialog id="leave-dialog" class="sheet" aria-labelledby="leave-title">
+    <div class="stack">
+      <h2 id="leave-title">ออกจากกิจกรรมนี้?</h2>
+      <p class="muted">ที่ของคุณจะว่างให้คนอื่นเข้าร่วมได้ คุณกลับมาเข้าร่วมใหม่ได้ถ้ายังมีที่ว่างและกิจกรรมยังไม่เริ่ม</p>
+      <p id="leave-error" class="error-message" role="alert" hidden></p>
+      <button id="leave-confirm" class="button button-danger" type="button">ออกจากกิจกรรม</button>
+      <button class="button button-outline" type="button" data-close>ยกเลิก</button>
+    </div>
+  </dialog>
+
+  <dialog id="post-menu" class="sheet" aria-labelledby="post-menu-title"><div id="post-menu-body" class="stack-tight"></div></dialog>
+  <dialog id="report-dialog" class="sheet" aria-labelledby="report-title"><div id="report-body" class="stack"></div></dialog>
+  <dialog id="confirm-dialog" class="sheet" aria-labelledby="confirm-title"><div id="confirm-body" class="stack"></div></dialog>
+  <dialog id="generic-dialog" class="sheet" aria-labelledby="generic-title"><div id="generic-body" class="stack"></div></dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><p class="noscript">กรุณาเปิด JavaScript เพื่อใช้งาน JoinGun</p></noscript>
+</body>
+</html>

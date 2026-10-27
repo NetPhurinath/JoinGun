@@ -2,6 +2,21 @@
 
 The existing mobile-first design, activity cards, create dialog and map presentation now use the Express/SQLite posting MVP. Root `index.html` opens this interface.
 
+## File responsibilities
+
+There is one frontend implementation, not two:
+
+| File | Responsibility |
+| --- | --- |
+| Root `index.html` | Entry point that redirects to the existing UI; contains no duplicate application UI |
+| `prototype/index.html` | Page shell and post/filter dialogs |
+| `prototype/app.js` | Browser UI rendering and requests to `/api/posts` |
+| `prototype/styles.css` | Shared styles for the active posting UI |
+| `prototype.md` (this file) | Documentation, not another application |
+| `server/app.js` | Express API and explicit UI asset routes; not browser code |
+
+Run and edit the frontend in `prototype/`. Do not copy it into `server/public/` or duplicate the page into root `index.html`. The `.docs/02-design/` path is retained for the course deliverable structure.
+
 ## Run and verify manually
 
 1. Run `npm ci` and `npm start` from the repository root. Open `http://127.0.0.1:3000`.

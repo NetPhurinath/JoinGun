@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "joingun-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--env-file-if-exists=data/preview.env", "server/index.js"],
+      "port": 3100
+    }
+  ]
+}

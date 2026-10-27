@@ -6,24 +6,15 @@ import { join, resolve, sep } from 'node:path';
 import { once } from 'node:events';
 import { DatabaseSync } from 'node:sqlite';
 import { openDatabase } from '../database.js';
-import { createApp } from '../app.js';
+import { fixture } from './helpers.js';
 
-async function fixture(t) {
-  const store = openDatabase(':memory:');
-  const server = createApp(store).listen(0,'127.0.0.1');
-  await once(server,'listening');
-  t.after(async()=>{await new Promise(resolve=>server.close(resolve));store.close();});
-  const url = `http://127.0.0.1:${server.address().port}`;
-  const post = body => fetch(`${url}/api/posts`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  return {store,url,post};
-}
 const activity = () => ({type:'activity',content:'Play badminton together',locationConsent:true,activity:{title:'Badminton',startsAt:new Date(Date.now()+86400000).toISOString(),location:'Campus sports hall',capacity:8}});
 
 test('text and activity posts round-trip through HTTP and SQLite with private audit records',async t=>{
   const {store,url,post}=await fixture(t);
   const first=await post({type:'text',content:" Hello '); DROP TABLE posts; -- <script>alert(1)</script> "});
   assert.equal(first.status,201);const text=await first.json();
-  assert.equal(text.author.id,'demo-student');assert.equal(text.activity,null);
+  assert.equal(text.author.name,'Student One');assert.equal(text.author.username,'student_1');assert.equal(text.activity,null);
   assert.equal(first.headers.get('location'),`/api/posts/${text.id}`);
   assert.equal((await (await fetch(url+first.headers.get('location'))).json()).content,text.content);
   const second=await post(activity());assert.equal(second.status,201);const a=await second.json();
@@ -32,6 +23,7 @@ test('text and activity posts round-trip through HTTP and SQLite with private au
   assert.deepEqual(feed.items.map(p=>p.id),[a.id,text.id]);
   assert.equal(JSON.stringify(feed).includes('ip_address'),false);
   assert.equal(store.db.prepare('SELECT count(*) AS n FROM audit_logs').get().n,2);
+  assert.equal(store.db.prepare('SELECT user_id FROM audit_logs LIMIT 1').get().user_id,text.author.id);
   const consent=store.db.prepare('SELECT * FROM consent_records').get();
   assert.equal(consent.terms_version,'location-v1');assert.equal(consent.post_id,a.id);
 });
@@ -52,8 +44,8 @@ test('feed pagination is stable when a newer post arrives',async t=>{
   for(const query of ['limit=0','limit=101','limit=abc','before=-1','before=1.5','limit=2&limit=3'])assert.equal((await fetch(`${url}/api/posts?${query}`)).status,400);
 });
 test('JSON errors, body limits, unknown routes and private file paths are handled',async t=>{
-  const {url}=await fixture(t);
-  assert.equal((await fetch(`${url}/api/posts`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{'})).status,400);
+  const {url,cookie}=await fixture(t);
+  assert.equal((await fetch(`${url}/api/posts`,{method:'POST',headers:{'Content-Type':'application/json',cookie},body:'{'})).status,400);
   assert.equal((await fetch(`${url}/api/posts`,{method:'POST',body:'hello'})).status,415);
   assert.equal((await fetch(`${url}/api/posts`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:'x'.repeat(40000)})})).status,413);
   for(const path of ['/api/posts/missing','/rule.md','/data/joingun.sqlite','/.git/config'])assert.equal((await fetch(url+path)).status,404);
@@ -80,17 +72,17 @@ test('posts persist after closing and reopening the database',()=>{
     rmSync(target,{recursive:true,force:true});
   }
 });
-test('original UI routes load and new activity fields round-trip',async t=>{
-  const {url,post}=await fixture(t);
-  const root=await (await fetch(url)).text();assert.match(root,/\.docs\/02-design\/prototype\/index.html/);
-  const html=await (await fetch(`${url}/.docs/02-design/prototype/index.html`)).text();
-  assert.match(html,/id="post-type"/);assert.match(html,/id="location-consent"/);
-  for(const asset of ['app.js','styles.css'])assert.equal((await fetch(`${url}/.docs/02-design/prototype/${asset}`)).status,200);
-  assert.equal((await fetch(`${url}/.docs/01-requirements/backlog.md`)).status,404);
+test('web UI routes load, private paths stay hidden, and activity fields round-trip',async t=>{
+  const {url,post,cookie}=await fixture(t);
+  const root=await fetch(url);assert.equal(root.status,200);
+  const html=await root.text();assert.match(html,/id="post-type"/);assert.match(html,/id="location-consent"/);
+  for(const asset of ['js/main.js','js/api.js','css/tokens.css','css/app.css'])assert.equal((await fetch(`${url}/${asset}`)).status,200,asset);
+  for(const path of ['/.docs/02-design/prototype/index.html','/.docs/01-requirements/backlog.md','/index.html/../rule.md','/server/app.js','/package.json'])assert.equal((await fetch(url+path)).status,404,path);
   const body=activity();Object.assign(body.activity,{category:'study',meeting:'Front door',lat:20.04,lng:99.89});
   const response=await post(body);assert.equal(response.status,201);const saved=await response.json();
   assert.equal(saved.activity.category,'study');assert.equal(saved.activity.meeting,'Front door');assert.equal(saved.activity.lat,20.04);
-  const again=await (await fetch(`${url}/api/posts/${saved.id}`)).json();assert.deepEqual(again,saved);
+  const again=await (await fetch(`${url}/api/posts/${saved.id}`,{headers:{cookie}})).json();assert.deepEqual(again,saved);
+  assert.equal((await (await fetch(`${url}/api/posts/${saved.id}`)).json()).activity.viewerStatus,null,'signed-out viewers have no status');
   for(const invalid of [{lat:91,lng:99},{lat:20},{category:'bad'},{meeting:'x'.repeat(1001)}]) {
     const a=activity();Object.assign(a.activity,invalid);assert.equal((await post(a)).status,400);
   }
@@ -106,5 +98,32 @@ test('additive schema migration preserves earlier activity data',()=>{
     db.close();store=openDatabase(filename);
     assert.equal(store.get('old').content,'Keep me');assert.equal(store.get('old').activity.location,'Library');assert.equal(store.get('old').activity.lat,null);
     store.close();store=openDatabase(filename);assert.equal(store.get('old').activity.category,'sport');
+    assert.equal(store.get('old').activity.joinedCount,1,'the earlier host becomes the first participant');
   }finally{store?.close();const target=resolve(dir);assert.ok(target.startsWith(resolve(tmpdir())+sep));rmSync(target,{recursive:true,force:true});}
+});
+test('feed filters by category, Bangkok calendar day and search text in SQL, with totals',async t=>{
+  const {url,post}=await fixture(t);
+  const at=iso=>{const body=activity();body.activity.startsAt=iso;return body;};
+  const sport=await (await post({...at('2099-03-10T23:30:00+07:00'),content:'Evening run 100%'})).json();
+  const study=at('2099-03-11T00:30:00+07:00');study.activity.category='study';study.activity.title='Library group';
+  const studyPost=await (await post(study)).json();
+  const text=await (await post({type:'text',content:'Anyone_at the cafe?'})).json();
+  const get=async query=>(await fetch(`${url}/api/posts?${query}`)).json();
+  assert.deepEqual((await get('category=text')).items.map(p=>p.id),[text.id]);
+  assert.deepEqual((await get('category=study')).items.map(p=>p.id),[studyPost.id]);
+  // 23:30 and 00:30 Bangkok time fall on different local days although both are 10 March in UTC.
+  assert.deepEqual((await get('date=2099-03-10')).items.map(p=>p.id),[sport.id]);
+  assert.deepEqual((await get('date=2099-03-11')).items.map(p=>p.id),[studyPost.id]);
+  assert.deepEqual((await get('q=library')).items.map(p=>p.id),[studyPost.id]);
+  assert.deepEqual((await get('q=100%25')).items.map(p=>p.id),[sport.id]);
+  assert.deepEqual((await get('q=_at')).items.map(p=>p.id),[text.id]);
+  assert.equal((await get('q=%25')).total,1);
+  const page=await get('limit=1');assert.equal(page.total,3);assert.equal(page.items.length,1);assert.ok(page.nextCursor);
+  const filtered=await get('category=sport&limit=1');assert.equal(filtered.total,1);assert.equal(filtered.nextCursor,null);
+  for(const query of ['category=music','date=2099-02-30','date=10-03-2099',`q=${'x'.repeat(101)}`,'category=sport&category=study'])assert.equal((await fetch(`${url}/api/posts?${query}`)).status,400,query);
+});
+test('activity capacity is limited to 2–50 including the host',async t=>{
+  const {post}=await fixture(t);
+  for(const capacity of [2,50]){const body=activity();body.activity.capacity=capacity;assert.equal((await post(body)).status,201,String(capacity));}
+  for(const capacity of [1,51,1000]){const body=activity();body.activity.capacity=capacity;assert.equal((await post(body)).status,400,String(capacity));}
 });

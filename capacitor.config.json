@@ -1,0 +1,14 @@
+{
+  "appId": "th.ac.joingun.app",
+  "appName": "JoinGun",
+  "webDir": "web",
+  "server": {
+    "url": "http://10.0.2.2:3000",
+    "cleartext": true,
+    "androidScheme": "https"
+  },
+  "android": {
+    "appendUserAgent": "JoinGunApp",
+    "allowMixedContent": false
+  }
+}

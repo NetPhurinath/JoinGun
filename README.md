@@ -1,10 +1,12 @@
 # JoinGun — เอกสารเตรียมส่ง W5
 
-## Posting MVP — Node.js, Express and SQLite
+## JoinGun app — Node.js, Express, SQLite and a Capacitor Android app (build 0.3.0)
 
-The posting MVP supports text posts and activity posts with a persistent SQLite database. From the repository root, run `npm ci` then `npm start`, and open `http://127.0.0.1:3000`. Requires Node.js 22.13+. Run `npm test` for API/database integration tests.
+The app covers F1–F6 of the spec: `.ac.th` email-code sign-up, activity posts with a map pin and place search, a paged feed with search and filters, joining and leaving, reminders and in-app notifications (with optional email), friends, a profile page whose activity history follows the owner's privacy setting, explainable activity recommendations behind their own consent, reports, blocks, a moderator screen with appeals, data download and account deletion. The UI in `web/` is a phone-app layout on every screen (bottom tab bar, light and dark themes) and also runs as an Android app through Capacitor (`android/`, `capacitor.config.json`), with activity reminders scheduled on the phone. Optional profile fields are stored encrypted.
 
-See [server/README.md](server/README.md) for the API, schema, configuration and local-demo limitations. The backend now serves the existing UI through root `index.html`; its post composer and feed use SQLite-backed APIs. The earlier design notes below describe the original prototype, not the current posting-only backend scope.
+From the repository root: `npm ci`, then `npm start`, and open `http://127.0.0.1:3000`. Requires Node.js 22.13+. `npm test` runs the API and database integration tests; `npm run seed` adds sample activities for local testing; `npm run moderator -- <username>` gives an account the moderator screen. GitHub Actions runs `npm test` on every push (`.github/workflows/test.yml`). `npm run perf` measures API response times (NFR1/NFR4) and `npm run bias-report` checks who recommendations favour. Android app: set `server.url` in `capacitor.config.json`, run `npm run cap:sync`, then `npm run cap:open` in Android Studio (see server/README.md, "Android app").
+
+See [server/README.md](server/README.md) for the API, schema, configuration and limits, and [DECISIONS.md](DECISIONS.md) for choices made without a team decision. `.docs/02-design/prototype/` remains as the design reference. The earlier design notes below describe the original prototype.
 
 โครงสร้างนี้จัดตามคำสั่งส่งอาจารย์และสไลด์ W2–W4: ใช้ `.docs/` (มีจุดนำหน้า) สำหรับเอกสารทำงาน และ `rule.md` ที่ราก repo ส่วน `เอกสาร/` เก็บต้นฉบับและสไลด์อ้างอิง
 
@@ -53,7 +55,7 @@ joingun/
 
 ## เปิด prototype
 
-Run `npm start` and open `http://127.0.0.1:3000` to use the existing UI with the backend. Direct file opening does not provide database access. See [prototype.md](.docs/02-design/prototype.md).
+Run `npm start` and open `http://127.0.0.1:3000` to use the web UI in `web/` with the backend. Direct file opening does not provide database access. See [server/README.md](server/README.md#web-ui-web); the static prototype is described in [prototype.md](.docs/02-design/prototype.md).
 
 ## ไฟล์ที่ยังต้องสร้าง
 

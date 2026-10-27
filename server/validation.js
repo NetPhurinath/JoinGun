@@ -1,5 +1,27 @@
 export class ValidationError extends Error {}
+export const MAX_CAPACITY = 50;
+export const CATEGORIES = ['sport', 'study', 'cafe'];
 const fail = message => { throw new ValidationError(message); };
+const validDay = value => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+};
+// Feed query: every value must be a single string; repeated parameters arrive as arrays and are rejected.
+export function validateFeedQuery(query) {
+  const { limit = '20', before = String(Number.MAX_SAFE_INTEGER), category = 'all', date = '', q = '', scope = 'all', open = '' } = query;
+  for (const value of [limit, before, category, date, q, scope, open]) if (typeof value !== 'string') fail('Each query parameter may appear only once.');
+  if (!['all', 'friends'].includes(scope)) fail('scope must be all or friends.');
+  if (!['', '0', '1'].includes(open)) fail('open must be 0 or 1.');
+  if (!/^\d+$/.test(limit) || +limit < 1 || +limit > 100 || !/^\d+$/.test(before) || !Number.isSafeInteger(+before) || +before < 1) {
+    fail('limit must be 1–100; before must be a positive integer cursor.');
+  }
+  if (!['all', 'text', ...CATEGORIES].includes(category)) fail('category must be all, text, sport, study or cafe.');
+  if (date && !validDay(date)) fail('date must be a calendar date in YYYY-MM-DD format.');
+  const search = q.trim();
+  if (search.length > 100) fail('q must contain at most 100 characters.');
+  return { limit: +limit, before: +before, category, date, q: search, scope, open: open === '1' };
+}
 function text(value, name, max) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max) {
     fail(`${name} must contain 1–${max} characters.`);
@@ -27,7 +49,7 @@ export function validatePost(body) {
   if (!Number.isFinite(calendar.getTime()) || calendar.toISOString().slice(0,10) !== datePart) fail('Invalid calendar date.');
   const start = new Date(a.startsAt);
   if (!Number.isFinite(start.getTime()) || start.getTime() <= Date.now()) fail('startsAt must be in the future.');
-  if (!Number.isInteger(a.capacity) || a.capacity < 2 || a.capacity > 1000) fail('capacity must be an integer from 2 to 1000, including the host.');
+  if (!Number.isInteger(a.capacity) || a.capacity < 2 || a.capacity > MAX_CAPACITY) fail(`capacity must be an integer from 2 to ${MAX_CAPACITY}, including the host.`);
   post.activity = { title: text(a.title, 'title', 120), startsAt: start.toISOString(), location: text(a.location, 'location', 300), capacity: a.capacity };
   if (a.category !== undefined && !['sport','study','cafe'].includes(a.category)) fail('Invalid activity category.');
   if ((a.lat !== undefined || a.lng !== undefined) && (typeof a.lat !== 'number' || typeof a.lng !== 'number' || !Number.isFinite(a.lat) || !Number.isFinite(a.lng) || Math.abs(a.lat)>90 || Math.abs(a.lng)>180)) fail('Valid latitude and longitude must be provided together.');

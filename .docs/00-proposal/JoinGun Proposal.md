@@ -24,7 +24,7 @@ Many university students, especially 1st year students, students who find it har
     
 * Difficult coordination: logistics(time, location, number of people) are scattered across multiple group social channels, easy to lose track of, with no centralized notifications  
     
-* Socially awkward with strangers: there’s no safe, trustworthy central space(verified via university email) for meeting new people who share the same activity interests.   
+* Socially awkward with strangers: there’s no safe, trustworthy central space(verified via an educational-institution email ending in .ac.th) for meeting new people who share the same activity interests.   
     
 * No personalized recommendations: students have to search for activities by themselves; there’s no system that learns their interests from past behavior. 
 
@@ -32,7 +32,7 @@ Many university students, especially 1st year students, students who find it har
 **Target Users:** 
 
 * **Primary:**   
-1. University students verified via their university email   
+1. University students verified via their educational-institution email (.ac.th)   
 2. Students who want to try new activities with people who share their interests, even if they’re strangers   
      
 * **Secondary:**   
@@ -54,7 +54,7 @@ Many university students, especially 1st year students, students who find it har
 
 **In-Scope Functionalities:**
 
-* Sign-up/verification via university email   
+* Sign-up/verification via educational-institution email (.ac.th)   
 * Post activities specifying number of people, location (pinned on a map), and time   
 * Notifications as the activity time approaches   
 * Friend system (add manually, or add people from the same activity group)   
@@ -75,7 +75,7 @@ Many university students, especially 1st year students, students who find it har
 
 **6\. Risk Assessment and Mitigation Plan**
 
-* **Safety risk** (meeting strangers in person) → Require verification via university email only; consider adding a report/block feature   
+* **Safety risk** (meeting strangers in person) → Require verification via educational-institution email (.ac.th) only; consider adding a report/block feature   
 * **Data privacy risk** (storing location and behavioral logs) → Restrict data access, define a clear privacy policy   
 * **Low user adoption risk** (few users at launch) → Start with a small target group within the university, promote through clubs 
 
@@ -83,7 +83,7 @@ Many university students, especially 1st year students, students who find it har
 
 **8\. Ethical Considerations**
 
-* University email verification to reduce the risk of fake accounts   
+* Educational-institution email (.ac.th) verification to reduce the risk of fake accounts   
 * Obtaining consent to collect and use user behavior data for recommendations  
 * Protecting user’s location data and personal information   
 * Responsibility for user safety when meeting in person 

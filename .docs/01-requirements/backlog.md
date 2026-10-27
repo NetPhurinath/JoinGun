@@ -8,7 +8,7 @@ The Trace column maps items to the [Requirement Spec](01-spec/20260908-01-joingu
 
 | Feature | ID | Task | Original Priority | Points | Status | Trace / Gaps |
 | --- | --- | --- | --- | --- | --- | --- |
-| Auth & User Mgmt | 1.1 | User Sign-up with University Email | High | 5 | Backlog | F1 |
+| Auth & User Mgmt | 1.1 | User Sign-up with University Email | High | 5 | Backlog | F1 (changed 2026-10-10: any `.ac.th` email; task name kept from the source PDF) |
 | Auth & User Mgmt | 1.2 | Email Verification Process | High | 3 | Backlog | F1, NFR3 |
 | Auth & User Mgmt | 1.3 | User Profile Creation & Management | High | 5 | Backlog | Scope workflow 2; no separate functional requirement ID |
 | Activity Management | 2.1 | Post New Activity | High | 8 | Backlog | F2 |

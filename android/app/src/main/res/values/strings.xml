@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">JoinGun</string>
+    <string name="title_activity_main">JoinGun</string>
+    <string name="package_name">th.ac.joingun.app</string>
+    <string name="custom_url_scheme">th.ac.joingun.app</string>
+</resources>
