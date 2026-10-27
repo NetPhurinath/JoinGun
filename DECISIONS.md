@@ -72,6 +72,16 @@ The user (Tech Lead) gave these after reviewing the questionnaire in `.docs/01-r
 | 37 | Browser end-to-end tests with Playwright 1.64.0 (dev dependency, pinned; 1.64.1 was less than two weeks old), Chromium only, on a Pixel 7 phone screen, against a separate in-memory test server (`tests/e2e/server.js`) that never opens `data/`. Run with `npm run test:e2e`; GitHub Actions job `e2e`. Approved by the Tech Lead on 2026-10-28. Hosting is postponed. | Test plan L2 needs the core journey checked in a real browser; the course method deck uses Playwright. The separate server keeps test accounts out of the pilot database. | `playwright.config.js`, `tests/e2e/` |
 | 38 | UAT participants: students with an `.ac.th` email aged **20 or over**, not taking 1305493, not JoinGun team members. No quotas for year, faculty, phone type or activity habits, and no exclusion of the team's friends or earlier JoinGun users. The screener now asks only eligibility and a time. | 20 is the Thai age of majority, so participants can consent for themselves (the draft said 18). The two exclusions kept come from the course slides (no classmates; teammates do not count). The quotas were AI proposals, not course requirements; dropping them also removes screener data that is no longer needed (PDPA data minimisation). | `.docs/03-testing/test-plan.md` §5.2, `uat-materials-th.md` parts A and G |
 
+## Added 2026-10-28 (gap plan phase 2 and phase 5 documents)
+
+The user (Tech Lead) asked for the traceability, agent/skill, audit, known-gaps and ACL documents and said to decide approval points as appropriate. Requirement and backlog changes belong to the Product Owner, so they were drafted, not applied.
+
+| # | Decision | Why | Where to change |
+| --- | --- | --- | --- |
+| 39 | Join/leave written as a draft **F8 (Must)** in a separate file; the spec and backlog 2.4 are unchanged. | CLAUDE.md: requirement changes go through the Product Owner. | `.docs/01-requirements/01-spec/20261028-03-f8-join-leave-draft.md` |
+| 40 | The backlog audit recommends **117 points** but the backlog text is unchanged. | The rows in both copies and the PDF's own task counts give 117; CLAUDE.md forbids changing the totals without asking. | `.docs/05-log/2026-10-28-backlog-audit.md` |
+| 41 | The team will not run gap plan phase 1 (interviews, Path B screenshots) or phase 3 (diagram review, PNG redraw, diagram checker). Traceability uses the questionnaire, Path B research and the draft `diagrams.md` as they are. | Given by the user on 2026-10-28. The W5 evidence and diagram gaps stay open. | `KNOWN-GAPS.md` |
+
 ## Still open (not decided here)
 
 - Hosting, HTTPS, domain and monthly budget (Tech Lead), and therefore disk encryption.
