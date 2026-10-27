@@ -65,7 +65,7 @@ Team notes before use:
 - การทดสอบนี้ไม่มีความเสี่ยงที่คาดการณ์ได้เกินกว่าการใช้โทรศัพท์ตามปกติ
 
 **7. คุณสมบัติผู้เข้าร่วม**
-นักศึกษาที่มีอีเมลสถานศึกษาลงท้ายด้วย .ac.th อายุ 18 ปีขึ้นไป ไม่ได้เรียนวิชา 1305493 และไม่เคยใช้ JoinGun มาก่อน
+นักศึกษาที่มีอีเมลสถานศึกษาลงท้ายด้วย .ac.th อายุ 20 ปีขึ้นไป ไม่ได้เรียนวิชา 1305493 และไม่ใช่สมาชิกทีมพัฒนา JoinGun
 
 ### แบบยินยอม
 
@@ -73,7 +73,7 @@ Team notes before use:
 
 | ข้อ | รายการ | ยินยอม | ไม่ยินยอม |
 | --- | --- | --- | --- |
-| 1 | ข้าพเจ้าได้อ่านและเข้าใจข้อมูลข้างต้น มีอายุ 18 ปีขึ้นไป และยินยอมเข้าร่วมการทดสอบโดยสมัครใจ | ☐ | ☐ |
+| 1 | ข้าพเจ้าได้อ่านและเข้าใจข้อมูลข้างต้น มีอายุ 20 ปีขึ้นไป และยินยอมเข้าร่วมการทดสอบโดยสมัครใจ | ☐ | ☐ |
 | 2 | ข้าพเจ้ายินยอมให้บันทึกภาพหน้าจอและเสียงระหว่างการทดสอบ (ไม่บันทึกใบหน้า) | ☐ | ☐ |
 | 3 | ข้าพเจ้ายินยอมให้ยกคำพูดของข้าพเจ้าไปใช้ในรายงานโดยไม่ระบุชื่อ | ☐ | ☐ |
 
@@ -298,9 +298,9 @@ One row per participant: `participant`, `year` (1–4, 5+), `faculty`, `ways` (c
 Team notes:
 
 - Use as an online form linked from the recruitment post (test plan §5.2). Turn off automatic email collection in the form tool; the contact field below is the only contact data asked.
-- Screener answers are recruitment data, not test data. They stay in the restricted sign-up sheet with the contact details (consent form A, section 5), are used only to choose and book participants, and are deleted on the same date as the contact details.
-- Do not copy screener answers into the session data. Year and faculty are asked again, without a name, in part H.
-- Selection rules and quotas are in the tracker at the end of this part.
+- Screener answers are recruitment data, not test data. They stay in the restricted sign-up sheet with the contact details (consent form A, section 5), are used only to check eligibility and book participants, and are deleted on the same date as the contact details.
+- The screener asks only what is needed to check the criteria in test plan §5.2 and to book a time (no quotas since 2026-10-28, DECISIONS.md #38). Year and faculty are asked once, without a name, in part H.
+- The selection rule is in the tracker at the end of this part.
 
 ---
 
@@ -308,56 +308,37 @@ Team notes:
 
 ทีม JoinGun (รายวิชา 1305493) กำลังหานักศึกษามาช่วยทดสอบแอปสำหรับหาเพื่อนร่วมทำกิจกรรม การทดสอบใช้เวลาประมาณ 30–35 นาที แบบตัวต่อตัว ที่ [สถานที่] ในวันพุธที่ 4 พ.ย. หรือวันที่ 7–8 พ.ย. 2569
 
-แบบฟอร์มนี้ใช้คัดเลือกและติดต่อนัดหมายเท่านั้น ใช้เวลากรอกประมาณ 2 นาที ข้อมูลเปิดดูได้เฉพาะผู้รับผิดชอบการทดสอบ ไม่นำไปใช้ในรายงาน และจะถูกลบภายใน [วันที่] การสมัครไม่ได้หมายความว่าจะได้รับเลือก และคุณถอนตัวได้ทุกเมื่อ
+แบบฟอร์มนี้ใช้ตรวจคุณสมบัติและติดต่อนัดหมายเท่านั้น ใช้เวลากรอกประมาณ 2 นาที ข้อมูลเปิดดูได้เฉพาะผู้รับผิดชอบการทดสอบ ไม่นำไปใช้ในรายงาน และจะถูกลบภายใน [วันที่] การสมัครไม่ได้หมายความว่าจะได้รับเลือก และคุณถอนตัวได้ทุกเมื่อ
 
 **ส่วนที่ 1 คุณสมบัติ**
 
 1. คุณเป็นนักศึกษาที่มีอีเมลสถานศึกษาลงท้ายด้วย .ac.th ใช่หรือไม่
    ☐ ใช่ ☐ ไม่ใช่
-2. คุณอายุ 18 ปีขึ้นไปใช่หรือไม่
+2. คุณอายุ 20 ปีขึ้นไปใช่หรือไม่
    ☐ ใช่ ☐ ไม่ใช่
-3. คุณเคยใช้แอปหรือเว็บ JoinGun มาก่อนหรือไม่
-   ☐ ไม่เคย ☐ เคย
-4. คุณเป็นสมาชิกทีมพัฒนา JoinGun เป็นเพื่อนสนิทของสมาชิกในทีม หรือกำลังเรียนวิชา 1305493 หรือไม่
+3. คุณเป็นสมาชิกทีมพัฒนา JoinGun หรือกำลังเรียนวิชา 1305493 หรือไม่
    ☐ ไม่ใช่ ☐ ใช่
 
-**ส่วนที่ 2 ข้อมูลสำหรับคัดเลือก**
+**ส่วนที่ 2 การนัดหมาย**
 
-5. ชั้นปี
-   ☐ ปี 1 ☐ ปี 2 ☐ ปี 3 ☐ ปี 4 ☐ ปี 5 ขึ้นไป
-6. คณะ / สำนักวิชา: ..................................................
-7. โทรศัพท์ที่คุณใช้เป็นประจำ
-   ☐ Android ☐ iPhone ☐ อื่น ๆ: ............
-8. ในภาคการศึกษานี้ คุณหาคนมาทำกิจกรรมด้วย (เช่น เล่นกีฬา ติวหนังสือ ไปคาเฟ่) บ่อยแค่ไหน
-   ☐ แทบไม่เคย ☐ เดือนละครั้งหรือน้อยกว่า ☐ 2–3 ครั้งต่อเดือน ☐ สัปดาห์ละครั้งขึ้นไป
-9. คุณเคยเข้าร่วมกิจกรรมกับคนที่ไม่รู้จักมาก่อนบ่อยแค่ไหน
-   ☐ ไม่เคย ☐ นาน ๆ ครั้ง ☐ บ่อย
+4. วันและช่วงเวลาที่สะดวก (เลือกได้หลายข้อ)
+   ☐ พ. 4 พ.ย. เช้า ☐ พ. 4 พ.ย. บ่าย ☐ ส. 7 พ.ย. เช้า ☐ ส. 7 พ.ย. บ่าย ☐ อา. 8 พ.ย. เช้า ☐ อา. 8 พ.ย. บ่าย
+5. ชื่อที่ให้เราเรียก: ..................................................
+6. ช่องทางติดต่อ (เลือกหนึ่งช่องทาง): ☐ LINE ID ☐ เบอร์โทรศัพท์ ..................................................
 
-**ส่วนที่ 3 การนัดหมาย**
-
-10. วันและช่วงเวลาที่สะดวก (เลือกได้หลายข้อ)
-    ☐ [วันที่ 1] เช้า ☐ [วันที่ 1] บ่าย ☐ [วันที่ 2] เช้า ☐ [วันที่ 2] บ่าย ☐ ...
-11. ชื่อที่ให้เราเรียก: ..................................................
-12. ช่องทางติดต่อ (เลือกหนึ่งช่องทาง): ☐ LINE ID ☐ เบอร์โทรศัพท์ ..................................................
-
-☐ ฉันอ่านข้อความข้างต้นแล้ว และยินยอมให้ทีมใช้ข้อมูลในแบบฟอร์มนี้เพื่อคัดเลือกและติดต่อนัดหมายเท่านั้น
+☐ ฉันอ่านข้อความข้างต้นแล้ว และยินยอมให้ทีมใช้ข้อมูลในแบบฟอร์มนี้เพื่อตรวจคุณสมบัติและติดต่อนัดหมายเท่านั้น
 
 ---
 
 **Selection tracker (team only, kept in the restricted sign-up sheet)**
 
-Eligible only if Q1 = ใช่, Q2 = ใช่, Q3 = ไม่เคย, Q4 = ไม่ใช่. Choose participants until every quota from test plan §5.2 is met, then fill the remaining places in the order applicants signed up. Keep 2 reserves.
+Eligible only if Q1 = ใช่, Q2 = ใช่, Q3 = ไม่ใช่. Book eligible applicants in the order they signed up: 6 for Wed 4 Nov (U01–U06) and 6 for 7–8 Nov (U07–U12), using their Q4 times, plus 2 reserves (U13–U14).
 
-| Quota (test plan §5.2) | Target | Booked |
+| Session day | Booked | Reserves |
 | --- | --- | --- |
-| Year 1 (Q5) | ≥ 3 | |
-| Year 2 | ≥ 2 | |
-| Year 3 | ≥ 2 | |
-| Year 4 | ≥ 2 | |
-| Different faculties (Q6) | ≥ 3 | |
-| Rarely join with new people (Q9 = ไม่เคย or นาน ๆ ครั้ง) | ≥ 3 | |
-| Android users (Q7) | ≥ 5 | |
-| Total booked / reserves | 12 / 2 | |
+| Wed 4 Nov (round 1) | / 6 | |
+| Sat 7 – Sun 8 Nov (round 2) | / 6 | |
+| Total | / 12 | / 2 |
 
 ---
 

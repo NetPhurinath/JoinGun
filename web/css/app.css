@@ -404,7 +404,9 @@ body.is-welcome .shell, body.is-welcome .tabbar { display: none !important; }
 .welcome { display: flex; flex-direction: column; gap: var(--space-6); min-height: 100dvh; padding: calc(var(--space-6) + env(safe-area-inset-top)) 0 calc(var(--space-6) + env(safe-area-inset-bottom)); }
 .welcome-art { display: flex; flex-direction: column; gap: var(--space-4); }
 .welcome-art > .brand-mark { margin: 0 var(--space-6); width: 48px; height: 48px; font-size: 28px; border-radius: 14px; }
-.welcome-art .collage { display: flex; gap: var(--space-3); overflow-x: auto; padding: var(--space-2) var(--space-6) var(--space-3); scroll-snap-type: x mandatory; scrollbar-width: none; }
+/* position: relative keeps the cards' absolutely positioned .visually-hidden labels inside the scroller; without it
+   they escape the clipping and widen the whole page on a phone (test plan TC-ACC-09). */
+.welcome-art .collage { position: relative; display: flex; gap: var(--space-3); overflow-x: auto; padding: var(--space-2) var(--space-6) var(--space-3); scroll-snap-type: x mandatory; scrollbar-width: none; }
 .welcome-art .collage::-webkit-scrollbar { display: none; }
 .collage .event-card { flex: 0 0 72%; scroll-snap-align: center; box-shadow: var(--shadow-soft); pointer-events: none; }
 .welcome-body { padding: 0 var(--space-6); }

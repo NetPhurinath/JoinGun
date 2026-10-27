@@ -3,6 +3,14 @@
 import { test, expect } from '@playwright/test';
 import { codeFor, signUpByApi } from './helpers.js';
 
+// TC-ACC-09: nothing on the welcome page is wider than a phone screen (the page once grew to 958 px on 412 px).
+test('NFR1 — the welcome page fits a phone screen', async ({ page }) => {
+  await page.goto('/#/welcome');
+  await expect(page.getByRole('button', { name: 'สมัครด้วยอีเมลสถานศึกษา' }).first()).toBeVisible();
+  const { scrollWidth, clientWidth } = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
+  expect(scrollWidth).toBe(clientWidth);
+});
+
 // TC-ACC-01/03/04, UI path: sign-up with an .ac.th email code, terms, profile.
 test('F1 — sign up with an .ac.th email code through the UI', async ({ page }) => {
   const email = 'newcomer@lamduan.mfu.ac.th';

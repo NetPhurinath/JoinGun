@@ -60,7 +60,7 @@ The levels follow the Testing Pyramid from the course (Unit → Integration → 
 | Level | What it proves | Tool | Who (proposed) | Runs when | State on 2026-10-28 |
 | --- | --- | --- | --- | --- | --- |
 | L1 Unit and API integration | Server rules: validation, access control, consent and log records, transactions, encryption | `node:test` (`npm test`), 47 tests in `server/test/` | Tech Lead | Every push (GitHub Actions `.github/workflows/test.yml`) and before each UAT round | **47 pass, 0 fail, 0 skipped (run 2026-10-28, Node 22.21.0).** |
-| L2 System / end-to-end (browser) | The real UI drives the real server: core journey, persistence after reload, delete-with-confirm, signed-out view | Playwright 1.64.0, Chromium with a Pixel 7 phone screen (`npm run test:e2e`, `tests/e2e/core-journey.spec.js`, own in-memory server `tests/e2e/server.js`) | QA/Test, Tech Lead | Every push (GitHub Actions job `e2e`) and before UAT round 1 | **Set up 2026-10-28 (approved by the Tech Lead). 5 tests: 4 pass, 1 fail (TC-ACC-09, a real layout defect).** |
+| L2 System / end-to-end (browser) | The real UI drives the real server: core journey, persistence after reload, delete-with-confirm, signed-out view | Playwright 1.64.0, Chromium with a Pixel 7 phone screen (`npm run test:e2e`, `tests/e2e/core-journey.spec.js`, own in-memory server `tests/e2e/server.js`) | QA/Test, Tech Lead | Every push (GitHub Actions job `e2e`) and before UAT round 1 | **Set up 2026-10-28 (approved by the Tech Lead). 6 tests, all pass after fixing the layout defect TC-ACC-09.** |
 | L3 Non-functional | NFR1–NFR4, security headers, rate limits | `npm run perf`, Chrome DevTools, stopwatch, manual measurement | Tech Lead, QA | Once on the UAT environment; NFR4 again on a deployed host | `npm run perf` exists; no recorded results on a host. |
 | L4 Compliance (rule.md) | Each applicable `rule.md` rule has evidence: records, fields, access limits, user-facing text | L1 tests + inspection checklist (§4.8) | QA, AI Lead (AI rules) | Before UAT round 1 | Partly covered by L1; inspection not done. |
 | L5 Device and compatibility | Layout and reminders on real phones; Android app works | Android phones (≥2 models), Chrome on Android, Safari on iPhone (web) | QA | Before UAT round 1 | Android app has not been built or run on a device. |
@@ -83,7 +83,7 @@ Each case names its requirement, as the method deck asks. **Steps / test data** 
 | TC-ACC-06 | Security | Sign in; inspect the `jg_session` cookie | `HttpOnly`, `SameSite=Lax`, `Secure` when configured | L1 | auth.test.js — "session cookie is HttpOnly and SameSite=Lax…" | Pass 2026-10-28 |
 | TC-ACC-07 | NFR3 | 10 real sign-up emails to at least 2 different `.ac.th` mail systems, timed from tapping "send code" to the message in the inbox | 10/10 arrive in the inbox (not spam) within 2 minutes | L3 | Manual, on the UAT environment with Gmail SMTP set. One real send recorded on 2026-10-14; not timed. | Not run |
 | TC-ACC-08 | F1 | Make the mail service fail (test mailer that throws) | 503 with a plain message; log has no email address | L1 | auth.test.js — "a failed email send returns 503…" | Pass 2026-10-28 |
-| TC-ACC-09 | F1, NFR1 (phone layout) | On a phone-size screen (Pixel 7, 412 px): welcome → "สมัครด้วยอีเมลสถานศึกษา" → email → code → terms → profile | Sign-up completes and the feed shows; nothing is wider than the screen | L2 | core-journey.spec.js — "F1 — sign up with an .ac.th email code through the UI" | **Fail 2026-10-28.** The welcome page is 958 px wide on a 412 px screen (the sample cards in `.welcome-art .collage` push the page wider), so the sign-up sheet is wider than the screen and "ถัดไป" cannot be clicked. The same test passes at 1280 px. Severity 3 (§7). |
+| TC-ACC-09 | F1, NFR1 (phone layout) | On a phone-size screen (Pixel 7, 412 px): welcome → "สมัครด้วยอีเมลสถานศึกษา" → email → code → terms → profile | Sign-up completes and the feed shows; nothing is wider than the screen | L2 | core-journey.spec.js — "F1 — sign up with an .ac.th email code through the UI" and "NFR1 — the welcome page fits a phone screen" | **Failed, then fixed; pass 2026-10-28.** The welcome page was 958 px wide on a 412 px screen, so the sign-up sheet was wider than the screen and "ถัดไป" could not be clicked (severity 3, §7). Cause: the `.visually-hidden` labels inside the sample cards are absolutely positioned and escaped the horizontal scroller `.welcome-art .collage`. Fix: `position: relative` on the scroller (`web/css/app.css`). |
 
 ### 4.2 Posting and maps (F2, NFR2, LR1; backlog 2.1, 3.1, 3.2)
 
@@ -184,16 +184,15 @@ The method deck's rule of thumb: the "Cannot" column matters most, and it must b
 
 ### 5.2 Participants
 
-| Criterion | Target |
+| Criterion | Source |
 | --- | --- |
-| Enrolled student with an `.ac.th` email, aged 18 or over | All |
-| Year of study | At least 2 from each of years 1–4; at least 3 first-years (the proposal's main group) |
-| Faculty | At least 3 different faculties |
-| Activity habit | At least 3 who say they rarely join activities with new people |
-| Phone | At least 5 Android users (to try the app); the rest use the web on their usual phone |
-| Excluded | Team members, their close friends, **students taking 1305493 (classmates)**, anyone who has used JoinGun before |
+| Enrolled student with an `.ac.th` email, **aged 20 or over** (the Thai age of majority, so participants can consent for themselves) | App accepts only `.ac.th` (F1); age decided by the Tech Lead on 2026-10-28 |
+| Not taking 1305493 (no classmates) | Course deck *Post-Midterm Plan*: "recruit users from your real target group, not classmates" |
+| Not a JoinGun team member | Course deck W5: users who are your own teammates do not count |
 
-Recruitment: posts in club and faculty groups, with a short screener (year, faculty, phone type, how often they look for activity partners). Users are booked in advance for 4 Nov and 7–8 Nov. The incentive, if any, is a team decision.
+No quotas for year, faculty, phone type or activity habits (decision 2026-10-28, DECISIONS.md #38). Year and faculty are still asked in the pre-session questionnaire, only to describe the participants in the report.
+
+Recruitment: posts in club and faculty groups, with a short screener that only checks the criteria above and books a time. Eligible applicants are booked in sign-up order (12 + 2 reserves) for 4 Nov and 7–8 Nov. The incentive, if any, is a team decision.
 
 ### 5.3 Ethics and personal data of participants
 
@@ -383,7 +382,7 @@ Dependencies: real-email sign-up by participants and the final NFR1/NFR3/NFR4 nu
 | P4 Impact Metrics (portfolio) | Before/after task results, SUS, TAM; plus one metric on AI's impact on the team's SDLC | 10 Nov |
 | Raw evidence (outside Git if it contains personal data) | Signed consent forms, the raw Excel sheet (one row per user), observation sheets, interview notes, photos or video taken with permission | Kept for the instructor to check |
 | UAT materials | Consent form, screener, observation sheet, SUS/TAM forms, "before" kit description ([uat-materials-th.md](uat-materials-th.md)) | Phase 1 |
-| `tests/e2e/*.spec.js` | Playwright tests, each title starting with its requirement ID (e.g. `2.4 LR1 — core journey…`) | Exists since 2026-10-28 (5 tests) |
+| `tests/e2e/*.spec.js` | Playwright tests, each title starting with its requirement ID (e.g. `2.4 LR1 — core journey…`) | Exists since 2026-10-28 (6 tests) |
 
 ## 11. Risks, gaps and assumptions
 
