@@ -1,5 +1,5 @@
 // Server for the Playwright tests only: an in-memory database, a mailer that records sign-in codes instead of sending
-// them, and seed activities. It never opens data/joingun.sqlite. Started by playwright.config.js.
+// them, and seed activities. It never opens data/ or DATABASE_URL. Started by playwright.config.js.
 import http from 'node:http';
 import { once } from 'node:events';
 import { openDatabase } from '../../server/database.js';
@@ -10,7 +10,7 @@ export const APP_PORT = 3100;
 export const CODE_PORT = 3101;
 
 const config = loadConfig({ APP_SECRET: 'e2e'.repeat(16) });
-const store = openDatabase(':memory:');
+const store = await openDatabase(':memory:');
 const codes = new Map();
 const mailer = { async send(message) { const code = message.subject.match(/(\d{6})$/)?.[1]; if (code) codes.set(message.to, code); } };
 const app = createApp(store, { config, mailer });
@@ -65,4 +65,4 @@ await call(`/api/activities/${full.id}/join`, 'POST', { participationConsent: tr
 await activity(host, { title: 'E2E Study group', category: 'study', hour: 13, location: 'Library entrance', capacity: 4 });
 
 console.log(`JoinGun e2e server: ${base} (codes on port ${CODE_PORT})`);
-for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { server.close(); codeServer.close(); store.close(); process.exit(0); });
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, async () => { server.close(); codeServer.close(); await store.close(); process.exit(0); });

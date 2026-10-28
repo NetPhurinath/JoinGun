@@ -4,7 +4,7 @@ import { fixture, TEST_CONFIG } from './helpers.js';
 import { isAllowedEmail } from '../auth.js';
 import { createSecurity } from '../security.js';
 
-const count = (store, sql, ...args) => store.db.prepare(sql).get(...args).n;
+const count = async (store, sql, ...args) => (await store.db.prepare(sql).get(...args)).n;
 
 test('sign-up stores no plaintext email, records terms acceptance and auth logs, and sessions work', async t => {
   const { store, json, cookie, config } = await fixture(t);
@@ -12,24 +12,26 @@ test('sign-up stores no plaintext email, records terms acceptance and auth logs,
   assert.deepEqual({ ...me, id: undefined }, { id: undefined, displayName: 'Student One', username: 'student_1', year: null, interests: ['sport'], participationConsent: false, needs: null, bio: '', role: 'user', historyVisibility: 'private', suspended: null });
 
   // The address appears nowhere in the database as plain text; the encrypted copy decrypts back to it.
-  const dump = JSON.stringify(['users', 'user_emails', 'login_codes', 'sessions', 'terms_acceptances', 'auth_logs'].map(table => store.db.prepare(`SELECT * FROM ${table}`).all()));
+  const tables = [];
+  for (const table of ['users', 'user_emails', 'login_codes', 'sessions', 'terms_acceptances', 'auth_logs']) tables.push(await store.db.prepare(`SELECT * FROM ${table}`).all());
+  const dump = JSON.stringify(tables);
   assert.equal(dump.includes('student@lamduan.mfu.ac.th'), false);
-  const stored = store.db.prepare('SELECT email_encrypted FROM user_emails').get().email_encrypted;
+  const stored = (await store.db.prepare('SELECT email_encrypted FROM user_emails').get()).email_encrypted;
   assert.equal(createSecurity(config.secret).decrypt(stored), 'student@lamduan.mfu.ac.th');
 
-  const terms = store.db.prepare('SELECT * FROM terms_acceptances').get();
+  const terms = await store.db.prepare('SELECT * FROM terms_acceptances').get();
   assert.equal(terms.user_id, me.id);
   assert.equal(terms.terms_version, config.termsVersion);
   assert.equal(terms.privacy_version, config.privacyVersion);
   assert.equal(terms.ip_address, '127.0.0.1');
   assert.match(terms.accepted_at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-  const actions = store.db.prepare('SELECT action, auth_status, user_id, source_ip FROM auth_logs ORDER BY rowid').all();
+  const actions = await store.db.prepare('SELECT action, auth_status, user_id, source_ip FROM auth_logs ORDER BY ctid').all(); // insert order
   assert.deepEqual(actions.map(row => `${row.action}:${row.auth_status}`), ['code.request:sent', 'signup:success', 'terms.accept:success', 'profile.create:success']);
   assert.ok(actions.slice(1).every(row => row.user_id === me.id && row.source_ip === '127.0.0.1'));
 
   assert.equal((await json('/api/auth/logout', 'POST', undefined, cookie)).status, 204);
   assert.equal((await json('/api/me', 'GET', undefined, cookie)).status, 401);
-  assert.equal(count(store, "SELECT count(*) AS n FROM auth_logs WHERE action = 'logout' AND user_id = ?", me.id), 1);
+  assert.equal(await count(store, "SELECT count(*) AS n FROM auth_logs WHERE action = 'logout' AND user_id = ?", me.id), 1);
 });
 
 test('session cookie is HttpOnly and SameSite=Lax, and Secure when configured', async t => {
@@ -67,10 +69,10 @@ test('codes are single-use, expire, lock after five wrong attempts, and resends 
   const locked = await json('/api/auth/verify', 'POST', { email, code });
   assert.equal(locked.status, 400, 'correct code refused after five wrong attempts');
   assert.match((await locked.json()).error, /ขอรหัสใหม่/);
-  assert.equal(count(store, "SELECT count(*) AS n FROM auth_logs WHERE action = 'login' AND auth_status LIKE 'failure%'"), 6);
+  assert.equal(await count(store, "SELECT count(*) AS n FROM auth_logs WHERE action = 'login' AND auth_status LIKE 'failure%'"), 6);
 
   // A fresh code works once, then cannot be reused.
-  store.db.prepare('DELETE FROM login_codes').run();
+  await store.db.prepare('DELETE FROM login_codes').run();
   const second = 'codes2@mfu.ac.th';
   await json('/api/auth/request-code', 'POST', { email: second });
   const fresh = sent.at(-1).code;
@@ -80,7 +82,7 @@ test('codes are single-use, expire, lock after five wrong attempts, and resends 
   // An expired code is refused.
   const third = 'codes3@mfu.ac.th';
   await json('/api/auth/request-code', 'POST', { email: third });
-  store.db.prepare("UPDATE login_codes SET expires_at = '2000-01-01T00:00:00.000Z'").run();
+  await store.db.prepare("UPDATE login_codes SET expires_at = '2000-01-01T00:00:00.000Z'").run();
   assert.equal((await json('/api/auth/verify', 'POST', { email: third, code: sent.at(-1).code })).status, 400);
 });
 
@@ -117,21 +119,21 @@ test('posting requires a signed-in account; foreign origins and mail failures ar
   assert.equal(crossSite.status, 403);
   const form = await fetch(`${url}/api/auth/logout`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'a=1' });
   assert.equal(form.status, 415);
-  assert.equal(count(store, 'SELECT count(*) AS n FROM posts'), 0);
+  assert.equal(await count(store, 'SELECT count(*) AS n FROM posts'), 0);
 });
 
 test('a failed email send returns 503 and is logged without the address', async t => {
   const { createApp } = await import('../app.js');
   const { openDatabase } = await import('../database.js');
   const { once } = await import('node:events');
-  const store = openDatabase(':memory:');
+  const store = await openDatabase(':memory:');
   const server = createApp(store, { config: TEST_CONFIG(), mailer: { async send() { const { MailError } = await import('../mailer.js'); throw new MailError('down'); } } }).listen(0, '127.0.0.1');
   await once(server, 'listening');
-  t.after(async () => { await new Promise(resolve => server.close(resolve)); store.close(); });
+  t.after(async () => { await new Promise(resolve => server.close(resolve)); await store.close(); });
   const original = console.error; console.error = () => {}; t.after(() => { console.error = original; });
   const response = await fetch(`http://127.0.0.1:${server.address().port}/api/auth/request-code`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'fail@mfu.ac.th' }) });
   assert.equal(response.status, 503);
-  const row = store.db.prepare('SELECT * FROM auth_logs').get();
+  const row = await store.db.prepare('SELECT * FROM auth_logs').get();
   assert.equal(row.auth_status, 'mail-failed'); assert.equal(JSON.stringify(row).includes('fail@mfu.ac.th'), false);
 });
 

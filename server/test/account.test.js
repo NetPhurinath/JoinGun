@@ -8,7 +8,7 @@ const activityBody = (capacity = 4, extra = {}) => ({
   type: 'activity', content: 'Badminton after class', locationConsent: true,
   activity: { title: 'Badminton', startsAt: future(), location: 'Sports hall', capacity, ...extra },
 });
-const count = (store, sql, ...args) => store.db.prepare(sql).get(...args).n;
+const count = async (store, sql, ...args) => (await store.db.prepare(sql).get(...args)).n;
 let hasZip = true;
 try { await import('@zip.js/zip.js'); } catch { hasZip = false; }
 
@@ -23,13 +23,13 @@ test('authors can edit their posts; the edit is logged and the meeting-place con
   assert.equal(saved.activity.title, 'Badminton (court 2)');
   assert.equal(saved.activity.capacity, 5);
   assert.ok(saved.updatedAt);
-  assert.equal(count(f.store, "SELECT count(*) AS n FROM audit_logs WHERE action = 'post.update'"), 1);
-  assert.equal(count(f.store, 'SELECT count(*) AS n FROM consent_records WHERE post_id = ?', created.id), 2);
+  assert.equal(await count(f.store, "SELECT count(*) AS n FROM audit_logs WHERE action = 'post.update'"), 1);
+  assert.equal(await count(f.store, 'SELECT count(*) AS n FROM consent_records WHERE post_id = ?', created.id), 2);
 
   assert.equal((await edit({ type: 'text', content: 'now text' })).status, 400, 'type cannot change');
   assert.equal((await edit({ ...activityBody(3), locationConsent: false })).status, 400, 'location consent needed again');
 
-  f.store.db.prepare("UPDATE activities SET starts_at = '2000-01-01T00:00:00.000Z' WHERE post_id = ?").run(created.id);
+  await f.store.db.prepare("UPDATE activities SET starts_at = '2000-01-01T00:00:00.000Z' WHERE post_id = ?").run(created.id);
   const late = await edit(activityBody(4));
   assert.equal(late.status, 409);
   assert.equal((await late.json()).code, 'started');
@@ -54,7 +54,7 @@ test('deleting a post hides it; a cancelled activity stays visible to its member
   await f.json(`/api/activities/${created.id}/join`, 'POST', { participationConsent: true }, member);
   assert.equal((await f.json(`/api/posts/${created.id}`, 'DELETE', undefined, member)).status, 403, 'only the author');
   assert.equal((await f.json(`/api/posts/${created.id}`, 'DELETE', undefined, f.cookie)).status, 204);
-  assert.equal(count(f.store, "SELECT count(*) AS n FROM audit_logs WHERE action = 'post.delete'"), 1);
+  assert.equal(await count(f.store, "SELECT count(*) AS n FROM audit_logs WHERE action = 'post.delete'"), 1);
   assert.equal((await (await fetch(`${f.url}/api/posts`)).json()).total, 0);
   assert.equal((await f.json(`/api/posts/${created.id}`, 'GET', undefined, outsider)).status, 404);
   const seen = await (await f.json(`/api/posts/${created.id}`, 'GET', undefined, member)).json();
@@ -69,8 +69,8 @@ test('reports are stored with reporter, reported user, reason and time; bad repo
   const reporter = await f.signUp('rep@mfu.ac.th', 'reporter_1');
   const send = (body, cookie = reporter) => f.json('/api/reports', 'POST', body, cookie);
   assert.equal((await send({ postId: created.id, reason: 'spam', details: '  ขายของ  ' })).status, 201);
-  const row = f.store.db.prepare('SELECT * FROM reports').get();
-  const author = f.store.db.prepare("SELECT id FROM users WHERE username = 'student_1'").get().id;
+  const row = await f.store.db.prepare('SELECT * FROM reports').get();
+  const author = (await f.store.db.prepare("SELECT id FROM users WHERE username = 'student_1'").get()).id;
   assert.equal(row.reported_user_id, author); assert.equal(row.post_id, created.id); assert.equal(row.reason, 'spam');
   assert.equal(row.details, 'ขายของ'); assert.equal(row.ip_address, '127.0.0.1'); assert.match(row.created_at, /Z$/);
   for (const bad of [{ postId: created.id, reason: 'boring' }, { postId: created.id, reason: 'other', details: 'x'.repeat(1001) }, { postId: 'nope', reason: 'spam' }, { postId: created.id, reason: 'spam', userId: 'x' }]) {
@@ -96,7 +96,7 @@ test('blocking hides the blocked author from the blocker only, and unblocking ke
   assert.equal((await f.json('/api/me/blocks', 'POST', { userId: 'demo-student' }, viewer)).status, 404);
   assert.equal((await f.json(`/api/me/blocks/${loudId}`, 'DELETE', undefined, viewer)).status, 204);
   assert.deepEqual(await feedFor(viewer), ['from loud']);
-  assert.equal(count(f.store, 'SELECT count(*) AS n FROM blocks WHERE removed_at IS NOT NULL'), 1, 'the block record is kept');
+  assert.equal(await count(f.store, 'SELECT count(*) AS n FROM blocks WHERE removed_at IS NOT NULL'), 1, 'the block record is kept');
 });
 
 test('withdrawing the participation consent stops future joins only', async t => {
@@ -113,7 +113,7 @@ test('withdrawing the participation consent stops future joins only', async t =>
   assert.equal((await blocked.json()).code, 'consent-required');
   assert.equal((await f.json('/api/me/consents/participation/withdraw', 'POST', {}, member)).status, 409);
   assert.equal((await f.json(`/api/activities/${second.id}/join`, 'POST', { participationConsent: true }, member)).status, 200, 'consent given again');
-  assert.equal(count(f.store, "SELECT count(*) AS n FROM auth_logs WHERE action = 'consent.withdraw'"), 1);
+  assert.equal(await count(f.store, "SELECT count(*) AS n FROM auth_logs WHERE action = 'consent.withdraw'"), 1);
 });
 
 test('data download is an AES-encrypted ZIP that opens only with the chosen password', { skip: !hasZip && 'run npm install to add @zip.js/zip.js' }, async t => {
@@ -139,7 +139,7 @@ test('data download is an AES-encrypted ZIP that opens only with the chosen pass
   assert.equal(data.participation[0].role, 'host');
   assert.equal(data.consents.termsAcceptances.length, 1);
   assert.ok(data.signInLog.some(row => row.action === 'signup'));
-  assert.equal(count(f.store, "SELECT count(*) AS n FROM auth_logs WHERE action = 'data.export'"), 1);
+  assert.equal(await count(f.store, "SELECT count(*) AS n FROM auth_logs WHERE action = 'data.export'"), 1);
 });
 
 test('deleting an account hides it at once, archives the email for 90 days, then purges it', async t => {
@@ -156,33 +156,33 @@ test('deleting an account hides it at once, archives the email for 90 days, then
   assert.match(deleted.headers.get('set-cookie'), /jg_session=;/);
   assert.equal((await f.json('/api/me', 'GET', undefined, leaver)).status, 401, 'session ended');
 
-  const user = f.store.db.prepare('SELECT * FROM users WHERE id = ?').get(leaverId);
+  const user = await f.store.db.prepare('SELECT * FROM users WHERE id = ?').get(leaverId);
   assert.equal(user.status, 'deleted'); assert.equal(user.display_name, null); assert.equal(user.username, null);
-  assert.equal(count(f.store, 'SELECT count(*) AS n FROM user_emails WHERE user_id = ?', leaverId), 0);
-  assert.equal(count(f.store, 'SELECT count(*) AS n FROM deleted_accounts WHERE user_id = ?', leaverId), 1, 'archived');
+  assert.equal(await count(f.store, 'SELECT count(*) AS n FROM user_emails WHERE user_id = ?', leaverId), 0);
+  assert.equal(await count(f.store, 'SELECT count(*) AS n FROM deleted_accounts WHERE user_id = ?', leaverId), 1, 'archived');
   assert.equal((await f.json(`/api/posts/${hosted.id}`, 'GET', undefined, f.cookie)).status, 404, 'hosted activity cancelled');
   const otherNow = await (await f.json(`/api/posts/${other.id}`, 'GET', undefined, f.cookie)).json();
   assert.equal(otherNow.activity.joinedCount, 1, 'left the activity they joined');
-  assert.ok(count(f.store, "SELECT count(*) AS n FROM auth_logs WHERE user_id = ? AND action = 'account.delete'", leaverId) === 1);
+  assert.ok(await count(f.store, "SELECT count(*) AS n FROM auth_logs WHERE user_id = ? AND action = 'account.delete'", leaverId) === 1);
 
   // The same address can start a new account while the old one is archived.
   const again = await f.signUp('bye@mfu.ac.th', 'bye_again');
   assert.notEqual((await (await f.json('/api/me', 'GET', undefined, again)).json()).id, leaverId);
 
   // 89 days: still archived. 91 days: purged, logs kept but no longer linked to an email.
-  runMaintenance(f.store.db, new Date(Date.now() + 89 * 86_400_000));
-  assert.equal(count(f.store, 'SELECT count(*) AS n FROM deleted_accounts'), 1);
-  const result = runMaintenance(f.store.db, new Date(Date.now() + 91 * 86_400_000));
+  await runMaintenance(f.store.db, new Date(Date.now() + 89 * 86_400_000));
+  assert.equal(await count(f.store, 'SELECT count(*) AS n FROM deleted_accounts'), 1);
+  const result = await runMaintenance(f.store.db, new Date(Date.now() + 91 * 86_400_000));
   assert.equal(result.purgedAccounts, 1);
-  assert.equal(count(f.store, 'SELECT count(*) AS n FROM deleted_accounts'), 0);
-  assert.equal(count(f.store, 'SELECT count(*) AS n FROM auth_logs WHERE user_id = ? AND email_hash IS NOT NULL', leaverId), 0);
-  assert.ok(count(f.store, 'SELECT count(*) AS n FROM auth_logs WHERE user_id = ?', leaverId) > 0, 'log rows themselves are kept');
-  assert.equal(f.store.db.prepare('SELECT content FROM posts WHERE id = ?').get(hosted.id).content, '[ลบแล้ว]');
+  assert.equal(await count(f.store, 'SELECT count(*) AS n FROM deleted_accounts'), 0);
+  assert.equal(await count(f.store, 'SELECT count(*) AS n FROM auth_logs WHERE user_id = ? AND email_hash IS NOT NULL', leaverId), 0);
+  assert.ok(await count(f.store, 'SELECT count(*) AS n FROM auth_logs WHERE user_id = ?', leaverId) > 0, 'log rows themselves are kept');
+  assert.equal((await f.store.db.prepare('SELECT content FROM posts WHERE id = ?').get(hosted.id)).content, '[ลบแล้ว]');
 });
 
 test('maintenance removes expired codes and sessions', async t => {
   const f = await fixture(t);
-  const result = runMaintenance(f.store.db, new Date(Date.now() + 40 * 86_400_000));
+  const result = await runMaintenance(f.store.db, new Date(Date.now() + 40 * 86_400_000));
   assert.ok(result.sessions >= 1);
   assert.equal((await f.json('/api/me', 'GET', undefined, f.cookie)).status, 401);
 });

@@ -23,18 +23,19 @@ export function sealProfile(security, { year = null, interests = [], bio = '' } 
   };
 }
 
-export function writeProfile(db, security, userId, profile) {
+export async function writeProfile(db, security, userId, profile) {
   const sealed = sealProfile(security, profile);
-  db.prepare("UPDATE users SET year = NULL, interests = '[]', bio = '', year_enc = ?, interests_enc = ?, bio_enc = ? WHERE id = ?")
+  await db.prepare("UPDATE users SET year = NULL, interests = '[]', bio = '', year_enc = ?, interests_enc = ?, bio_enc = ? WHERE id = ?")
     .run(sealed.year_enc, sealed.interests_enc, sealed.bio_enc, userId);
 }
 
 export const clearProfile = (db, userId) =>
   db.prepare("UPDATE users SET year = NULL, interests = '[]', bio = '', year_enc = NULL, interests_enc = NULL, bio_enc = NULL WHERE id = ?").run(userId);
 
-// Encrypts rows written before encryption existed (or by older scripts). Safe to run on every start.
-export function migrateProfileEncryption(db, security) {
-  const rows = db.prepare("SELECT * FROM users WHERE year IS NOT NULL OR interests != '[]' OR bio != ''").all();
-  for (const row of rows) writeProfile(db, security, row.id, openProfile(security, row));
+// Encrypts rows that hold plain optional fields (for example written by an older script). Not run at start-up: the
+// PostgreSQL database starts empty, and every write path already goes through writeProfile.
+export async function migrateProfileEncryption(db, security) {
+  const rows = await db.prepare("SELECT * FROM users WHERE year IS NOT NULL OR interests != '[]' OR bio != ''").all();
+  for (const row of rows) await writeProfile(db, security, row.id, openProfile(security, row));
   return rows.length;
 }

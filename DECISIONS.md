@@ -43,7 +43,7 @@ The user (Tech Lead) asked for a complete, testable version and said to pick the
 | --- | --- | --- | --- |
 | 21 | Security headers written by hand instead of adding helmet. | No new dependency to review; the needed headers are few. | `server/app.js` |
 | 22 | In-memory rate limits (overall 300 writes per IP per 15 minutes, plus per-action limits). | One server process for the pilot; a shared store is needed only with several processes. | `server/app.js` |
-| 23 | Daily `VACUUM INTO` backup kept 7 days in `data/backups/`. | Consistent snapshot without stopping the server; 7 days keeps purged accounts out of backups within a week. | `BACKUP_KEEP_DAYS`, `BACKUP_DIR` |
+| 23 | Daily `VACUUM INTO` backup kept 7 days in `data/backups/`. **Replaced on 2026-10-29 by decision 44 (Railway PostgreSQL backups).** | Consistent snapshot without stopping the server; 7 days keeps purged accounts out of backups within a week. | — |
 | 24 | No disk or field encryption added beyond the existing encrypted email. | Display names and usernames must be searchable and unique; full-disk encryption belongs to the hosting choice (Tech Lead). | — |
 | 25 | GitHub Actions workflow added, assuming the GitHub remote named in README. | README names `maefahluang-uni/Join-Gun`; the remote choice is still marked unconfirmed in CLAUDE.md. | `.github/workflows/test.yml` |
 | 26 | `npm run seed` adds four sample accounts (no email, cannot sign in) and five activities; refuses to run in production. | Testers need content to look at on day one. Do not run it on the pilot database. | `server/scripts/seed.js` |
@@ -82,9 +82,21 @@ The user (Tech Lead) asked for the traceability, agent/skill, audit, known-gaps 
 | 40 | The backlog audit recommends **117 points** but the backlog text is unchanged. | The rows in both copies and the PDF's own task counts give 117; CLAUDE.md forbids changing the totals without asking. | `.docs/05-log/2026-10-28-backlog-audit.md` |
 | 41 | The team will not run gap plan phase 1 (interviews, Path B screenshots) or phase 3 (diagram review, PNG redraw, diagram checker). Traceability uses the questionnaire, Path B research and the draft `diagrams.md` as they are. | Given by the user on 2026-10-28. The W5 evidence and diagram gaps stay open. | `KNOWN-GAPS.md` |
 
+## Hosting on Railway (2026-10-29)
+
+The Tech Lead chose Railway for hosting and Railway's PostgreSQL for the database. The existing data is test data only and is not migrated.
+
+| # | Decision | Why | Where to change |
+| --- | --- | --- | --- |
+| 42 | Host on Railway with the Railway PostgreSQL service. The database layer is async (`pg`); `DATABASE_URL` is required in production. | Given by the Tech Lead on 2026-10-29. Replaces SQLite (`node:sqlite`), decisions 23 (backup) and the SQLite parts of earlier decisions. | `server/database.js`, `server/config.js`, `railway.json` |
+| 43 | Development and tests use PGlite (PostgreSQL compiled to WebAssembly, a dev dependency) when `DATABASE_URL` is empty. | `npm start` and `npm test` keep working with no database install, and the tests run real PostgreSQL SQL. PGlite is not the exact Railway server version, so a deploy check is still needed. | `server/database.js` |
+| 44 | The app no longer makes its own database backups (`VACUUM INTO`, `BACKUP_*` removed). Backups are Railway's. | `VACUUM INTO` does not exist in PostgreSQL. What Railway's plan keeps, and for how long, is not yet checked; purged accounts leave Railway backups only when those backups expire. | Railway project settings |
+| 45 | Schema starts empty with every column in one `CREATE TABLE IF NOT EXISTS` set. The additive `ALTER` migrations and the plain-to-encrypted profile migration at start-up were removed. | No old data to carry over (Tech Lead, 2026-10-29). Later schema changes will need a real migration step. | `server/database.js` |
+
 ## Still open (not decided here)
 
-- Hosting, HTTPS, domain and monthly budget (Tech Lead), and therefore disk encryption.
+- Domain, monthly budget (Tech Lead), and whether Railway's disk and database encryption is enough (the disk-encryption question in decision 24).
+- What Railway's plan keeps as database backups, and for how long.
 - Whether to add Firebase Cloud Messaging for server-sent push in the app (needs a Firebase project).
 - Building and testing the Android app on a real phone (needs Android Studio).
 - A written retention schedule for logs and records kept after an account is purged (Product Owner).

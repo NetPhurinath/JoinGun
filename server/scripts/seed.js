@@ -3,7 +3,7 @@
 // Refuses to run with NODE_ENV=production. Run it again to add another set of activities.
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { openDatabase } from '../database.js';
+import { openDatabaseFromEnv } from '../database.js';
 import { loadConfig } from '../config.js';
 import { createSecurity } from '../security.js';
 import { writeProfile } from '../profile-crypto.js';
@@ -12,7 +12,7 @@ try { process.loadEnvFile(); } catch (error) { if (error.code !== 'ENOENT') thro
 if (process.env.NODE_ENV === 'production') { console.error('npm run seed is for development only.'); process.exit(1); }
 const config = loadConfig(process.env, { devSecretFile: fileURLToPath(new URL('../../data/dev-secret.txt', import.meta.url)) });
 const security = createSecurity(config.secret);
-const store = openDatabase(process.env.DATABASE_PATH || fileURLToPath(new URL('../../data/joingun.sqlite', import.meta.url)));
+const store = await openDatabaseFromEnv(process.env, fileURLToPath(new URL('../../data/pglite/', import.meta.url)));
 const { db } = store;
 const now = new Date().toISOString();
 
@@ -24,12 +24,12 @@ const people = [
 ];
 const ids = {};
 for (const [username, name, year, interests, bio] of people) {
-  const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+  const existing = await db.prepare('SELECT id FROM users WHERE username = ?').get(username);
   if (existing) { ids[username] = existing.id; continue; }
   const id = randomUUID();
-  db.prepare(`INSERT INTO users (id, username, display_name, status, terms_version, privacy_version, created_at, updated_at, history_visibility)
+  await db.prepare(`INSERT INTO users (id, username, display_name, status, terms_version, privacy_version, created_at, updated_at, history_visibility)
     VALUES (?, ?, ?, 'active', ?, ?, ?, ?, 'public')`).run(id, username, name, config.termsVersion, config.privacyVersion, now, now);
-  writeProfile(db, security, id, { year, interests, bio });
+  await writeProfile(db, security, id, { year, interests, bio });
   ids[username] = id;
 }
 
@@ -46,14 +46,14 @@ const activities = [
 ];
 for (const [author, title, content, category, startsAt, location, meeting, capacity, lat, lng] of activities) {
   const id = randomUUID();
-  db.exec('BEGIN');
-  db.prepare('INSERT INTO posts (id, author_id, type, content, created_at) VALUES (?, ?, ?, ?, ?)').run(id, ids[author], 'activity', content, now);
-  db.prepare('INSERT INTO activities (post_id, title, starts_at, location, capacity, category, meeting, lat, lng) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, title, startsAt, location, capacity, category, meeting, lat, lng);
-  db.prepare('INSERT INTO consent_records VALUES (?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), id, ids[author], 'publish-meeting-location', 'location-v1', now, 'seed');
-  db.prepare("INSERT INTO participants (activity_id, user_id, role, status, joined_at) VALUES (?, ?, 'host', 'joined', ?)").run(id, ids[author], now);
-  db.prepare('INSERT INTO audit_logs VALUES (?, ?, ?, ?, ?, ?)').run(randomUUID(), id, ids[author], 'post.create', now, 'seed');
-  db.exec('COMMIT');
+  await db.transaction(async tx => {
+    await tx.prepare('INSERT INTO posts (id, author_id, type, content, created_at) VALUES (?, ?, ?, ?, ?)').run(id, ids[author], 'activity', content, now);
+    await tx.prepare('INSERT INTO activities (post_id, title, starts_at, location, capacity, category, meeting, lat, lng) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, title, startsAt, location, capacity, category, meeting, lat, lng);
+    await tx.prepare('INSERT INTO consent_records VALUES (?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), id, ids[author], 'publish-meeting-location', 'location-v1', now, 'seed');
+    await tx.prepare("INSERT INTO participants (activity_id, user_id, role, status, joined_at) VALUES (?, ?, 'host', 'joined', ?)").run(id, ids[author], now);
+    await tx.prepare('INSERT INTO audit_logs VALUES (?, ?, ?, ?, ?, ?)').run(randomUUID(), id, ids[author], 'post.create', now, 'seed');
+  });
 }
-db.prepare('INSERT INTO posts (id, author_id, type, content, created_at) VALUES (?, ?, ?, ?, ?)').run(randomUUID(), ids.demo_fah, 'text', 'ใครรู้จักร้านกาแฟที่เปิดถึงดึกแถวมหาลัยบ้าง แนะนำหน่อย ☕', now);
+await db.prepare('INSERT INTO posts (id, author_id, type, content, created_at) VALUES (?, ?, ?, ?, ?)').run(randomUUID(), ids.demo_fah, 'text', 'ใครรู้จักร้านกาแฟที่เปิดถึงดึกแถวมหาลัยบ้าง แนะนำหน่อย ☕', now);
 console.log(`Seeded ${people.length} sample accounts and ${activities.length} activities (plus one text post).`);
-store.close();
+await store.close();

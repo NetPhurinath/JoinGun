@@ -35,16 +35,19 @@ export function loadConfig(env = process.env, { devSecretFile } = {}) {
 
   // Comma-separated emails that become moderators on sign-in (the report review screen).
   const moderatorEmails = (env.MODERATOR_EMAILS || '').split(',').map(item => item.trim().toLowerCase()).filter(Boolean);
-  const backupKeepDays = env.BACKUP_KEEP_DAYS === undefined || env.BACKUP_KEEP_DAYS === '' ? 7 : Number(env.BACKUP_KEEP_DAYS);
-  if (!Number.isInteger(backupKeepDays) || backupKeepDays < 0 || backupKeepDays > 365) throw new Error('BACKUP_KEEP_DAYS must be a whole number from 0 (off) to 365.');
   const host = env.HOST || '127.0.0.1';
   if (!/^[a-zA-Z0-9.:[\]-]+$/.test(host)) throw new Error('Invalid HOST.');
+
+  // PostgreSQL connection URL (Railway sets DATABASE_URL). Without it, development and tests use a local PGlite database.
+  const databaseUrl = (env.DATABASE_URL || '').trim();
+  if (production && !databaseUrl) throw new Error('DATABASE_URL is required in production.');
+  if (databaseUrl && !/^postgres(ql)?:\/\//i.test(databaseUrl)) throw new Error('DATABASE_URL must start with postgres:// or postgresql://.');
 
   return {
     production,
     moderatorEmails,
-    backupKeepDays,
-    backupDir: env.BACKUP_DIR || '',
+    databaseUrl,
+    databaseSsl: env.DATABASE_SSL || '',
     secret,
     emailSuffix,
     gmailUser,

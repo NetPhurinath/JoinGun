@@ -20,16 +20,15 @@ if (useGmail) {
   catch { throw new Error('nodemailer is not installed. Run "npm install" in the project folder, then start again.'); }
   mailer = createGmailMailer({ user: config.gmailUser, appPassword: config.gmailAppPassword, fromName: config.mailFromName }, nodemailer.createTransport);
 }
-const store = openDatabase(process.env.DATABASE_PATH || fileURLToPath(new URL('joingun.sqlite', dataDir)));
+// PostgreSQL when DATABASE_URL is set (Railway); otherwise a local PGlite database in data/ for development.
+const databaseTarget = config.databaseUrl || fileURLToPath(new URL('pglite/', dataDir));
+const store = await openDatabase(databaseTarget, { ssl: config.databaseSsl });
 const app = createApp(store, { config, mailer });
 
-scheduleMaintenance(store.db, {
-  notifier: app.locals.notifier, mailer: useGmail ? mailer : null, security: app.locals.security,
-  backupDir: config.backupDir || fileURLToPath(new URL('backups/', dataDir)), backupKeepDays: config.backupKeepDays,
-});
+scheduleMaintenance(store.db, { notifier: app.locals.notifier, mailer: useGmail ? mailer : null, security: app.locals.security });
 
 const server = app.listen(port, config.host, () => {
-  console.log(`JoinGun: http://${config.host === '0.0.0.0' ? '127.0.0.1' : config.host}:${port}  (email: ${useGmail ? `Gmail ${config.gmailUser}` : 'console, development only'}; backups: ${config.backupKeepDays ? `${config.backupKeepDays} days` : 'off'})`);
+  console.log(`JoinGun: http://${config.host === '0.0.0.0' ? '127.0.0.1' : config.host}:${port}  (email: ${useGmail ? `Gmail ${config.gmailUser}` : 'console, development only'}; database: ${config.databaseUrl ? 'PostgreSQL' : 'local PGlite, development only'})`);
 });
-server.on('error', error => { console.error(error.message); store.close(); process.exitCode = 1; });
-for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => server.close(() => { store.close(); process.exit(0); }));
+server.on('error', async error => { console.error(error.message); await store.close(); process.exitCode = 1; });
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => server.close(async () => { await store.close(); process.exit(0); }));

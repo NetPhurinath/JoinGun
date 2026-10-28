@@ -6,14 +6,15 @@ import { loadConfig } from '../config.js';
 
 export const TEST_CONFIG = () => loadConfig({ APP_SECRET: 't'.repeat(48) });
 
-// Starts the app on a random port with an in-memory database and a mailer that records codes instead of sending.
+// Starts the app on a random port with an in-memory database (PGlite, real PostgreSQL SQL) and a mailer that records
+// codes instead of sending.
 export async function fixture(t, { config = TEST_CONFIG() } = {}) {
-  const store = openDatabase(':memory:');
+  const store = await openDatabase(':memory:');
   const sent = [];
   const mailer = { async send(message) { sent.push({ ...message, code: message.subject.match(/(\d{6})$/)[1] }); } };
   const server = createApp(store, { config, mailer }).listen(0,'127.0.0.1');
   await once(server,'listening');
-  t.after(async()=>{await new Promise(resolve=>server.close(resolve));store.close();});
+  t.after(async()=>{await new Promise(resolve=>server.close(resolve));await store.close();});
   const url = `http://127.0.0.1:${server.address().port}`;
   const json = (path, method, body, cookie) => fetch(url + path, { method, headers: { 'Content-Type': 'application/json', ...(cookie ? { cookie } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
   // Full sign-up: code by email, verify, accept terms, set profile. Returns the session cookie.

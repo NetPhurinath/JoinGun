@@ -21,26 +21,27 @@ export function reminderEmail(title, startsAt, minutes) {
 const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 export function createNotifier(db) {
-  const insert = db.prepare('INSERT OR IGNORE INTO notifications (id, user_id, type, actor_id, post_id, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
-  const active = id => db.prepare("SELECT 1 FROM users WHERE id = ? AND status = 'active'").get(id);
+  // `conn` is the database or, inside a transaction, the transaction object (default: the database).
+  const insert = (conn, ...values) => conn.prepare('INSERT INTO notifications (id, user_id, type, actor_id, post_id, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING').run(...values);
+  const active = (conn, id) => conn.prepare("SELECT 1 FROM users WHERE id = ? AND status = 'active'").get(id);
 
   const notifier = {
-    notify({ userId, type, actorId = null, postId = null, data = {} }) {
-      if (!userId || userId === actorId || !active(userId)) return;
-      insert.run(randomUUID(), userId, type, actorId, postId, JSON.stringify(data), now());
+    async notify({ userId, type, actorId = null, postId = null, data = {} }, conn = db) {
+      if (!userId || userId === actorId || !(await active(conn, userId))) return;
+      await insert(conn, randomUUID(), userId, type, actorId, postId, JSON.stringify(data), now());
     },
 
     // Everyone currently in an activity except the actor (usually the host).
-    notifyMembers(postId, actorId, type, data = {}) {
-      const members = db.prepare("SELECT user_id FROM participants WHERE activity_id = ? AND status = 'joined'").all(postId);
-      for (const { user_id: userId } of members) notifier.notify({ userId, type, actorId, postId, data });
+    async notifyMembers(postId, actorId, type, data = {}, conn = db) {
+      const members = await conn.prepare("SELECT user_id FROM participants WHERE activity_id = ? AND status = 'joined'").all(postId);
+      for (const { user_id: userId } of members) await notifier.notify({ userId, type, actorId, postId, data }, conn);
     },
 
-    list(userId, { before = null, limit = 30 } = {}) {
-      const rows = db.prepare(`SELECT n.*, u.display_name AS actor_name, u.username AS actor_username, u.status AS actor_status,
+    async list(userId, { before = null, limit = 30 } = {}) {
+      const rows = await db.prepare(`SELECT n.*, u.display_name AS actor_name, u.username AS actor_username, u.status AS actor_status,
           a.title AS activity_title, a.starts_at, p.deleted_at
         FROM notifications n LEFT JOIN users u ON u.id = n.actor_id LEFT JOIN activities a ON a.post_id = n.post_id LEFT JOIN posts p ON p.id = n.post_id
-        WHERE n.user_id = ? AND (? IS NULL OR n.created_at < ?) ORDER BY n.created_at DESC LIMIT ?`).all(userId, before, before, limit + 1);
+        WHERE n.user_id = ? AND (?::text IS NULL OR n.created_at < ?::text) ORDER BY n.created_at DESC LIMIT ?`).all(userId, before, before, limit + 1);
       const page = rows.slice(0, limit);
       return {
         items: page.map(row => ({
@@ -53,43 +54,45 @@ export function createNotifier(db) {
       };
     },
 
-    unreadCount: userId => db.prepare('SELECT count(*) AS n FROM notifications WHERE user_id = ? AND read_at IS NULL').get(userId).n,
+    unreadCount: async userId => (await db.prepare('SELECT count(*) AS n FROM notifications WHERE user_id = ? AND read_at IS NULL').get(userId)).n,
 
-    markRead(userId, ids) {
-      if (ids === 'all') return db.prepare('UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL').run(now(), userId).changes;
+    async markRead(userId, ids) {
+      if (ids === 'all') return (await db.prepare('UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL').run(now(), userId)).changes;
       if (!Array.isArray(ids) || ids.length > 100 || ids.some(id => typeof id !== 'string')) throw new HttpError(400, 'bad-request', 'ข้อมูลที่ส่งมาไม่ถูกต้อง');
       const update = db.prepare('UPDATE notifications SET read_at = ? WHERE user_id = ? AND id = ? AND read_at IS NULL');
-      return ids.reduce((sum, id) => sum + update.run(now(), userId, id).changes, 0);
+      let sum = 0;
+      for (const id of ids) sum += (await update.run(now(), userId, id)).changes;
+      return sum;
     },
 
-    preferences(userId) {
-      const row = db.prepare('SELECT notify_reminders, notify_email, reminder_minutes FROM users WHERE id = ?').get(userId);
+    async preferences(userId) {
+      const row = await db.prepare('SELECT notify_reminders, notify_email, reminder_minutes FROM users WHERE id = ?').get(userId);
       return { reminders: Boolean(row.notify_reminders), email: Boolean(row.notify_email), reminderMinutes: row.reminder_minutes };
     },
 
-    savePreferences(userId, body) {
+    async savePreferences(userId, body) {
       if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(k => !['reminders', 'email', 'reminderMinutes'].includes(k))) {
         throw new HttpError(400, 'bad-request', 'ข้อมูลที่ส่งมาไม่ถูกต้อง');
       }
-      const current = notifier.preferences(userId);
+      const current = await notifier.preferences(userId);
       const next = { ...current, ...body };
       if (typeof next.reminders !== 'boolean' || typeof next.email !== 'boolean') throw new HttpError(400, 'bad-request', 'ค่าการแจ้งเตือนไม่ถูกต้อง');
       if (!REMINDER_CHOICES.includes(next.reminderMinutes)) throw new HttpError(400, 'reminder-minutes', 'เลือกเวลาแจ้งเตือนจากตัวเลือกที่มี');
-      db.prepare('UPDATE users SET notify_reminders = ?, notify_email = ?, reminder_minutes = ?, updated_at = ? WHERE id = ?')
+      await db.prepare('UPDATE users SET notify_reminders = ?, notify_email = ?, reminder_minutes = ?, updated_at = ? WHERE id = ?')
         .run(next.reminders ? 1 : 0, next.email ? 1 : 0, next.reminderMinutes, now(), userId);
       return notifier.preferences(userId);
     },
 
     // Reminders for people in activities that start within their chosen lead time. Returns the new reminders so the
     // caller can also send email to those who turned it on.
-    dueReminders(at = new Date()) {
+    async dueReminders(at = new Date()) {
       const time = at.toISOString();
-      const rows = db.prepare(`SELECT c.user_id, a.post_id, a.title, a.starts_at, u.notify_email, u.reminder_minutes
+      const rows = await db.prepare(`SELECT c.user_id, a.post_id, a.title, a.starts_at, u.notify_email, u.reminder_minutes
         FROM participants c JOIN activities a ON a.post_id = c.activity_id JOIN posts p ON p.id = a.post_id JOIN users u ON u.id = c.user_id
         WHERE c.status = 'joined' AND p.deleted_at IS NULL AND u.status = 'active' AND u.notify_reminders = 1
-          AND a.starts_at > ? AND julianday(a.starts_at) <= julianday(?) + u.reminder_minutes / 1440.0
+          AND a.starts_at > ? AND a.starts_at::timestamptz <= ?::timestamptz + u.reminder_minutes * interval '1 minute'
           AND NOT EXISTS (SELECT 1 FROM notifications n WHERE n.user_id = c.user_id AND n.post_id = a.post_id AND n.type = 'activity.reminder')`).all(time, time);
-      for (const row of rows) insert.run(randomUUID(), row.user_id, 'activity.reminder', null, row.post_id, JSON.stringify({ minutes: row.reminder_minutes }), time);
+      for (const row of rows) await insert(db, randomUUID(), row.user_id, 'activity.reminder', null, row.post_id, JSON.stringify({ minutes: row.reminder_minutes }), time);
       return rows.map(row => ({ userId: row.user_id, postId: row.post_id, title: row.title, startsAt: row.starts_at, email: Boolean(row.notify_email), minutes: row.reminder_minutes }));
     },
   };

@@ -3,14 +3,13 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
-import { once } from 'node:events';
-import { DatabaseSync } from 'node:sqlite';
 import { openDatabase } from '../database.js';
 import { fixture } from './helpers.js';
 
 const activity = () => ({type:'activity',content:'Play badminton together',locationConsent:true,activity:{title:'Badminton',startsAt:new Date(Date.now()+86400000).toISOString(),location:'Campus sports hall',capacity:8}});
+const count = async (store, sql, ...args) => (await store.db.prepare(sql).get(...args)).n;
 
-test('text and activity posts round-trip through HTTP and SQLite with private audit records',async t=>{
+test('text and activity posts round-trip through HTTP and the database with private audit records',async t=>{
   const {store,url,post}=await fixture(t);
   const first=await post({type:'text',content:" Hello '); DROP TABLE posts; -- <script>alert(1)</script> "});
   assert.equal(first.status,201);const text=await first.json();
@@ -22,16 +21,16 @@ test('text and activity posts round-trip through HTTP and SQLite with private au
   const feed=await (await fetch(`${url}/api/posts`)).json();
   assert.deepEqual(feed.items.map(p=>p.id),[a.id,text.id]);
   assert.equal(JSON.stringify(feed).includes('ip_address'),false);
-  assert.equal(store.db.prepare('SELECT count(*) AS n FROM audit_logs').get().n,2);
-  assert.equal(store.db.prepare('SELECT user_id FROM audit_logs LIMIT 1').get().user_id,text.author.id);
-  const consent=store.db.prepare('SELECT * FROM consent_records').get();
+  assert.equal(await count(store,'SELECT count(*) AS n FROM audit_logs'),2);
+  assert.equal((await store.db.prepare('SELECT user_id FROM audit_logs ORDER BY ctid LIMIT 1').get()).user_id,text.author.id);
+  const consent=await store.db.prepare('SELECT * FROM consent_records').get();
   assert.equal(consent.terms_version,'location-v1');assert.equal(consent.post_id,a.id);
 });
 test('invalid requests do not create posts, consent or audit records',async t=>{
   const {post,store}=await fixture(t);
   const bad=[null,[],{type:'other',content:'x'},{type:'text',content:'   '},{type:'text',content:'x'.repeat(5001)}, {type:'text',content:'x',authorId:'admin'}, {type:'text',content:'x',activity:{}}, {...activity(),locationConsent:false}, {...activity(),activity:{...activity().activity,capacity:2.5}}, {...activity(),activity:{...activity().activity,startsAt:'2020-01-01T12:00:00Z'}}, {...activity(),activity:{...activity().activity,startsAt:'2099-02-30T12:00:00Z'}}, {...activity(),activity:{...activity().activity,startsAt:'2099-01-01T24:00:00Z'}}, {...activity(),activity:{...activity().activity,startsAt:'2099-01-01T12:00:00'}}, {...activity(),activity:{...activity().activity,location:''}}];
   for(const body of bad) assert.equal((await post(body)).status,400,JSON.stringify(body));
-  for(const table of ['posts','activities','consent_records','audit_logs'])assert.equal(store.db.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0);
+  for(const table of ['posts','activities','consent_records','audit_logs'])assert.equal(await count(store,`SELECT count(*) AS n FROM ${table}`),0);
 });
 test('feed pagination is stable when a newer post arrives',async t=>{
   const {url,post}=await fixture(t);
@@ -48,25 +47,27 @@ test('JSON errors, body limits, unknown routes and private file paths are handle
   assert.equal((await fetch(`${url}/api/posts`,{method:'POST',headers:{'Content-Type':'application/json',cookie},body:'{'})).status,400);
   assert.equal((await fetch(`${url}/api/posts`,{method:'POST',body:'hello'})).status,415);
   assert.equal((await fetch(`${url}/api/posts`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:'x'.repeat(40000)})})).status,413);
-  for(const path of ['/api/posts/missing','/rule.md','/data/joingun.sqlite','/.git/config'])assert.equal((await fetch(url+path)).status,404);
+  for(const path of ['/api/posts/missing','/rule.md','/data/dev-secret.txt','/data/pglite/PG_VERSION','/.git/config'])assert.equal((await fetch(url+path)).status,404);
   assert.equal((await fetch(url)).status,200);
   assert.equal((await fetch(url+'/api/health')).status,200);
 });
 test('failed audit write rolls back post and activity atomically',async t=>{
   const {store,post}=await fixture(t);
-  store.db.exec("CREATE TRIGGER fail_audit BEFORE INSERT ON audit_logs BEGIN SELECT RAISE(ABORT, 'test failure'); END;");
+  await store.db.exec(`CREATE FUNCTION fail_audit() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'test failure'; END $$ LANGUAGE plpgsql;
+    CREATE TRIGGER fail_audit BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION fail_audit();`);
+  const original=console.error;console.error=()=>{};t.after(()=>{console.error=original;});
   assert.equal((await post(activity())).status,500);
-  for(const table of ['posts','activities','consent_records','audit_logs'])assert.equal(store.db.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0);
+  for(const table of ['posts','activities','consent_records','audit_logs'])assert.equal(await count(store,`SELECT count(*) AS n FROM ${table}`),0);
 });
-test('posts persist after closing and reopening the database',()=>{
+test('posts persist after closing and reopening the database',async()=>{
   const dir=mkdtempSync(join(tmpdir(),'joingun-test-'));let store;
   try {
-    const file=join(dir,'test.sqlite');store=openDatabase(file);
-    const post=store.create({type:'text',content:'persistent',activity:null},{userId:'demo-student',ip:'127.0.0.1'});
-    store.close();store=openDatabase(file);assert.equal(store.get(post.id).content,'persistent');
-    assert.equal(store.db.prepare('SELECT count(*) AS n FROM audit_logs').get().n,1);
+    const folder=join(dir,'pglite');store=await openDatabase(folder);
+    const post=await store.create({type:'text',content:'persistent',activity:null},{userId:'demo-student',ip:'127.0.0.1'});
+    await store.close();store=await openDatabase(folder);assert.equal((await store.get(post.id)).content,'persistent');
+    assert.equal(await count(store,'SELECT count(*) AS n FROM audit_logs'),1);
   } finally {
-    store?.close();
+    await store?.close();
     const target = resolve(dir);
     assert.ok(target.startsWith(resolve(tmpdir()) + sep) && target.includes('joingun-test-'));
     rmSync(target,{recursive:true,force:true});
@@ -87,19 +88,16 @@ test('web UI routes load, private paths stay hidden, and activity fields round-t
     const a=activity();Object.assign(a.activity,invalid);assert.equal((await post(a)).status,400);
   }
 });
-test('additive schema migration preserves earlier activity data',()=>{
+test('opening an existing database again keeps its tables and rows (schema setup is idempotent)',async()=>{
   const dir=mkdtempSync(join(tmpdir(),'joingun-test-'));let store;
   try {
-    const filename=join(dir,'legacy.sqlite');const db=new DatabaseSync(filename);
-    db.exec(`CREATE TABLE posts(sequence INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT UNIQUE,author_id TEXT,type TEXT,content TEXT,created_at TEXT);
-      CREATE TABLE activities(post_id TEXT PRIMARY KEY,title TEXT,starts_at TEXT,location TEXT,capacity INTEGER);
-      INSERT INTO posts VALUES(1,'old','demo-student','activity','Keep me','2026-10-01T00:00:00Z');
-      INSERT INTO activities VALUES('old','Existing','2099-01-01T00:00:00Z','Library',5);`);
-    db.close();store=openDatabase(filename);
-    assert.equal(store.get('old').content,'Keep me');assert.equal(store.get('old').activity.location,'Library');assert.equal(store.get('old').activity.lat,null);
-    store.close();store=openDatabase(filename);assert.equal(store.get('old').activity.category,'sport');
-    assert.equal(store.get('old').activity.joinedCount,1,'the earlier host becomes the first participant');
-  }finally{store?.close();const target=resolve(dir);assert.ok(target.startsWith(resolve(tmpdir())+sep));rmSync(target,{recursive:true,force:true});}
+    const folder=join(dir,'pglite');store=await openDatabase(folder);
+    const created=await store.create({type:'activity',content:'Keep me',activity:{title:'Existing',startsAt:'2099-01-01T00:00:00.000Z',location:'Library',capacity:5}},{userId:'host-1',ip:'127.0.0.1'});
+    await store.close();store=await openDatabase(folder);
+    const again=await store.get(created.id);
+    assert.equal(again.content,'Keep me');assert.equal(again.activity.location,'Library');assert.equal(again.activity.lat,null);assert.equal(again.activity.category,'sport');
+    assert.equal(again.activity.joinedCount,1,'the host is the first participant');
+  }finally{await store?.close();const target=resolve(dir);assert.ok(target.startsWith(resolve(tmpdir())+sep));rmSync(target,{recursive:true,force:true});}
 });
 test('feed filters by category, Bangkok calendar day and search text in SQL, with totals',async t=>{
   const {url,post}=await fixture(t);

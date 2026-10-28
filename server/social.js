@@ -11,18 +11,18 @@ export function createSocial(db, notifier, security) {
   const log = (userId, action, targetId, ip) =>
     db.prepare('INSERT INTO action_logs VALUES (?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), userId, action, 'user', targetId, now(), ip);
   const activeUser = id => db.prepare("SELECT * FROM users WHERE id = ? AND status = 'active'").get(id);
-  const byUsername = username => typeof username === 'string' ? db.prepare("SELECT * FROM users WHERE username = ? AND status = 'active'").get(username.toLowerCase()) : null;
-  const blocked = (blocker, blockedId) => Boolean(db.prepare('SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ? AND removed_at IS NULL').get(blocker, blockedId));
+  const byUsername = async username => typeof username === 'string' ? db.prepare("SELECT * FROM users WHERE username = ? AND status = 'active'").get(username.toLowerCase()) : null;
+  const blocked = async (blocker, blockedId) => Boolean(await db.prepare('SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ? AND removed_at IS NULL').get(blocker, blockedId));
   const openRequest = (a, b) => db.prepare(`SELECT * FROM friendships WHERE status IN ('pending','accepted')
     AND ((requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)) ORDER BY created_at DESC LIMIT 1`).get(a, b, b, a);
-  const friendIds = userId => db.prepare(`SELECT CASE WHEN requester_id = ? THEN addressee_id ELSE requester_id END AS id FROM friendships
-    WHERE status = 'accepted' AND (requester_id = ? OR addressee_id = ?)`).all(userId, userId, userId).map(row => row.id);
+  const friendIds = async userId => (await db.prepare(`SELECT CASE WHEN requester_id = ? THEN addressee_id ELSE requester_id END AS id FROM friendships
+    WHERE status = 'accepted' AND (requester_id = ? OR addressee_id = ?)`).all(userId, userId, userId)).map(row => row.id);
 
   // 'self' | 'friends' | 'outgoing' | 'incoming' | 'none' as seen by the viewer.
-  function relation(viewerId, otherId) {
+  async function relation(viewerId, otherId) {
     if (!viewerId) return 'none';
     if (viewerId === otherId) return 'self';
-    const row = openRequest(viewerId, otherId);
+    const row = await openRequest(viewerId, otherId);
     if (!row) return 'none';
     if (row.status === 'accepted') return 'friends';
     return row.requester_id === viewerId ? 'outgoing' : 'incoming';
@@ -34,160 +34,169 @@ export function createSocial(db, notifier, security) {
   const social = {
     relation,
     friendIds,
-    interestsOf: userId => profileOf(db.prepare('SELECT * FROM users WHERE id = ?').get(userId)).interests,
+    interestsOf: async userId => profileOf(await db.prepare('SELECT * FROM users WHERE id = ?').get(userId)).interests,
 
-    profile(username, viewerId) {
-      const user = byUsername(username);
+    async profile(username, viewerId) {
+      const user = await byUsername(username);
       if (!user) throw new HttpError(404, 'not-found', 'ไม่พบผู้ใช้นี้');
-      const rel = relation(viewerId, user.id);
-      const count = (sql, ...args) => db.prepare(sql).get(...args).n;
+      const rel = await relation(viewerId, user.id);
+      const count = async (sql, ...args) => (await db.prepare(sql).get(...args)).n;
       // Year and interests are shown only to signed-in students, not to anonymous visitors.
       const shown = viewerId ? card(user) : { ...card(user), year: null, interests: [] };
       return {
         ...shown, bio: profileOf(user).bio, createdAt: user.created_at, relation: rel,
-        requestId: ['incoming', 'outgoing'].includes(rel) ? openRequest(viewerId, user.id).id : null,
-        blockedByMe: viewerId ? blocked(viewerId, user.id) : false,
+        requestId: ['incoming', 'outgoing'].includes(rel) ? (await openRequest(viewerId, user.id)).id : null,
+        blockedByMe: viewerId ? await blocked(viewerId, user.id) : false,
         historyVisibility: rel === 'self' ? user.history_visibility : undefined,
-        historyVisible: social.canSeeHistory(user, viewerId),
+        historyVisible: await social.canSeeHistory(user, viewerId),
         stats: {
-          friends: count(`SELECT count(*) AS n FROM friendships WHERE status = 'accepted' AND (requester_id = ? OR addressee_id = ?)`, user.id, user.id),
-          hosted: count(`SELECT count(*) AS n FROM posts p JOIN activities a ON a.post_id = p.id WHERE p.author_id = ? AND p.deleted_at IS NULL`, user.id),
-          joined: count(`SELECT count(*) AS n FROM participants c JOIN posts p ON p.id = c.activity_id WHERE c.user_id = ? AND c.role = 'member' AND c.status = 'joined' AND p.deleted_at IS NULL`, user.id),
+          friends: await count(`SELECT count(*) AS n FROM friendships WHERE status = 'accepted' AND (requester_id = ? OR addressee_id = ?)`, user.id, user.id),
+          hosted: await count(`SELECT count(*) AS n FROM posts p JOIN activities a ON a.post_id = p.id WHERE p.author_id = ? AND p.deleted_at IS NULL`, user.id),
+          joined: await count(`SELECT count(*) AS n FROM participants c JOIN posts p ON p.id = c.activity_id WHERE c.user_id = ? AND c.role = 'member' AND c.status = 'joined' AND p.deleted_at IS NULL`, user.id),
         },
       };
     },
 
-    canSeeHistory(user, viewerId) {
+    async canSeeHistory(user, viewerId) {
       if (!viewerId) return false;
       if (viewerId === user.id) return true;
       if (user.history_visibility === 'public') return true;
-      if (user.history_visibility === 'friends') return relation(viewerId, user.id) === 'friends';
+      if (user.history_visibility === 'friends') return (await relation(viewerId, user.id)) === 'friends';
       return false;
     },
 
     // Activities the person joined (as host or member), newest first, if the viewer may see them.
-    history(username, viewerId) {
-      const user = byUsername(username);
+    async history(username, viewerId) {
+      const user = await byUsername(username);
       if (!user) throw new HttpError(404, 'not-found', 'ไม่พบผู้ใช้นี้');
-      if (!social.canSeeHistory(user, viewerId)) throw new HttpError(403, 'history-hidden', 'ผู้ใช้นี้ไม่ได้เปิดให้คุณเห็นประวัติการเข้าร่วม');
-      return db.prepare(`SELECT c.activity_id AS id, c.role, a.title, a.category, a.starts_at, a.location, a.completed_at
+      if (!(await social.canSeeHistory(user, viewerId))) throw new HttpError(403, 'history-hidden', 'ผู้ใช้นี้ไม่ได้เปิดให้คุณเห็นประวัติการเข้าร่วม');
+      return (await db.prepare(`SELECT c.activity_id AS id, c.role, a.title, a.category, a.starts_at, a.location, a.completed_at
         FROM participants c JOIN activities a ON a.post_id = c.activity_id JOIN posts p ON p.id = a.post_id
-        WHERE c.user_id = ? AND c.status = 'joined' AND p.deleted_at IS NULL ORDER BY a.starts_at DESC LIMIT 100`).all(user.id)
+        WHERE c.user_id = ? AND c.status = 'joined' AND p.deleted_at IS NULL ORDER BY a.starts_at DESC LIMIT 100`).all(user.id))
         .map(row => ({ id: row.id, role: row.role, title: row.title, category: row.category, startsAt: row.starts_at, location: row.location, completedAt: row.completed_at }));
     },
 
-    setHistoryVisibility(userId, value) {
+    async setHistoryVisibility(userId, value) {
       if (!HISTORY_VISIBILITY.includes(value)) throw new HttpError(400, 'visibility', 'ตัวเลือกความเป็นส่วนตัวไม่ถูกต้อง');
-      db.prepare('UPDATE users SET history_visibility = ?, updated_at = ? WHERE id = ?').run(value, now(), userId);
+      await db.prepare('UPDATE users SET history_visibility = ?, updated_at = ? WHERE id = ?').run(value, now(), userId);
       return { historyVisibility: value };
     },
 
     // People search by username or display name (for adding friends). Active accounts only; no email is searchable.
-    search(q, viewerId) {
+    async search(q, viewerId) {
       const term = typeof q === 'string' ? q.trim().toLowerCase().replace(/^@/, '') : '';
       if (term.length < 1 || term.length > 50) return [];
       const pattern = `%${term.replace(/[\\%_]/g, char => `\\${char}`)}%`;
-      return db.prepare(`SELECT * FROM users WHERE status = 'active' AND username IS NOT NULL AND id != ?
+      const rows = await db.prepare(`SELECT * FROM users WHERE status = 'active' AND username IS NOT NULL AND id != ?
           AND (username LIKE ? ESCAPE '\\' OR lower(display_name) LIKE ? ESCAPE '\\') ORDER BY username = ? DESC, username LIMIT 20`)
-        .all(viewerId ?? '', pattern, pattern, term).map(row => ({ ...card(row), relation: relation(viewerId, row.id) }));
+        .all(viewerId ?? '', pattern, pattern, term);
+      const items = [];
+      for (const row of rows) items.push({ ...card(row), relation: await relation(viewerId, row.id) });
+      return items;
     },
 
-    friends(userId) {
-      return db.prepare(`SELECT u.*, f.responded_at FROM friendships f JOIN users u ON u.id = CASE WHEN f.requester_id = ? THEN f.addressee_id ELSE f.requester_id END
+    async friends(userId) {
+      return (await db.prepare(`SELECT u.*, f.responded_at FROM friendships f JOIN users u ON u.id = CASE WHEN f.requester_id = ? THEN f.addressee_id ELSE f.requester_id END
         WHERE f.status = 'accepted' AND (f.requester_id = ? OR f.addressee_id = ?) AND u.status = 'active' ORDER BY u.display_name`)
-        .all(userId, userId, userId).map(row => ({ ...card(row), since: row.responded_at }));
+        .all(userId, userId, userId)).map(row => ({ ...card(row), since: row.responded_at }));
     },
 
-    requests(userId) {
-      const list = (sql) => db.prepare(sql).all(userId).map(row => ({ id: row.request_id, createdAt: row.created_at, user: card(row) }));
+    async requests(userId) {
+      const list = async sql => (await db.prepare(sql).all(userId)).map(row => ({ id: row.request_id, createdAt: row.created_at, user: card(row) }));
       return {
-        incoming: list(`SELECT u.*, f.id AS request_id, f.created_at FROM friendships f JOIN users u ON u.id = f.requester_id
+        incoming: await list(`SELECT u.*, f.id AS request_id, f.created_at FROM friendships f JOIN users u ON u.id = f.requester_id
           WHERE f.addressee_id = ? AND f.status = 'pending' AND u.status = 'active' ORDER BY f.created_at DESC`),
-        outgoing: list(`SELECT u.*, f.id AS request_id, f.created_at FROM friendships f JOIN users u ON u.id = f.addressee_id
+        outgoing: await list(`SELECT u.*, f.id AS request_id, f.created_at FROM friendships f JOIN users u ON u.id = f.addressee_id
           WHERE f.requester_id = ? AND f.status = 'pending' AND u.status = 'active' ORDER BY f.created_at DESC`),
       };
     },
 
-    request(fromId, toId, ip) {
-      if (typeof toId !== 'string' || !activeUser(toId)) throw new HttpError(404, 'not-found', 'ไม่พบผู้ใช้นี้');
+    async request(fromId, toId, ip) {
+      if (typeof toId !== 'string' || !(await activeUser(toId))) throw new HttpError(404, 'not-found', 'ไม่พบผู้ใช้นี้');
       if (toId === fromId) throw new HttpError(400, 'self', 'ส่งคำขอถึงตัวเองไม่ได้');
-      if (blocked(fromId, toId)) throw new HttpError(409, 'blocked', 'คุณบล็อกผู้ใช้นี้อยู่ เลิกบล็อกก่อนจึงจะส่งคำขอได้');
+      if (await blocked(fromId, toId)) throw new HttpError(409, 'blocked', 'คุณบล็อกผู้ใช้นี้อยู่ เลิกบล็อกก่อนจึงจะส่งคำขอได้');
       // The other person blocked the sender: refuse without saying so.
-      if (blocked(toId, fromId)) throw new HttpError(409, 'unavailable', 'ส่งคำขอเป็นเพื่อนถึงผู้ใช้นี้ไม่ได้');
-      const existing = openRequest(fromId, toId);
+      if (await blocked(toId, fromId)) throw new HttpError(409, 'unavailable', 'ส่งคำขอเป็นเพื่อนถึงผู้ใช้นี้ไม่ได้');
+      const existing = await openRequest(fromId, toId);
       if (existing?.status === 'accepted') return { status: 'friends' };
       if (existing && existing.requester_id === fromId) return { status: 'outgoing', requestId: existing.id };
       // They already asked us: sending back counts as accepting.
       if (existing) return social.respond(fromId, existing.id, true, ip);
       const id = randomUUID();
-      db.prepare("INSERT INTO friendships (id, requester_id, addressee_id, status, created_at, ip_address) VALUES (?, ?, ?, 'pending', ?, ?)").run(id, fromId, toId, now(), ip);
-      log(fromId, 'friend.request', toId, ip);
-      notifier.notify({ userId: toId, type: 'friend.request', actorId: fromId });
+      await db.prepare("INSERT INTO friendships (id, requester_id, addressee_id, status, created_at, ip_address) VALUES (?, ?, ?, 'pending', ?, ?)").run(id, fromId, toId, now(), ip);
+      await log(fromId, 'friend.request', toId, ip);
+      await notifier.notify({ userId: toId, type: 'friend.request', actorId: fromId });
       return { status: 'outgoing', requestId: id };
     },
 
-    respond(userId, requestId, accept, ip) {
-      const row = db.prepare("SELECT * FROM friendships WHERE id = ? AND addressee_id = ? AND status = 'pending'").get(requestId, userId);
+    async respond(userId, requestId, accept, ip) {
+      const row = await db.prepare("SELECT * FROM friendships WHERE id = ? AND addressee_id = ? AND status = 'pending'").get(requestId, userId);
       if (!row) throw new HttpError(404, 'not-found', 'ไม่พบคำขอเป็นเพื่อนนี้');
-      db.prepare('UPDATE friendships SET status = ?, responded_at = ? WHERE id = ?').run(accept ? 'accepted' : 'declined', now(), requestId);
-      log(userId, accept ? 'friend.accept' : 'friend.decline', row.requester_id, ip);
-      if (accept) notifier.notify({ userId: row.requester_id, type: 'friend.accept', actorId: userId });
+      await db.prepare('UPDATE friendships SET status = ?, responded_at = ? WHERE id = ?').run(accept ? 'accepted' : 'declined', now(), requestId);
+      await log(userId, accept ? 'friend.accept' : 'friend.decline', row.requester_id, ip);
+      if (accept) await notifier.notify({ userId: row.requester_id, type: 'friend.accept', actorId: userId });
       return { status: accept ? 'friends' : 'none' };
     },
 
-    cancel(userId, requestId, ip) {
-      const row = db.prepare("SELECT * FROM friendships WHERE id = ? AND requester_id = ? AND status = 'pending'").get(requestId, userId);
+    async cancel(userId, requestId, ip) {
+      const row = await db.prepare("SELECT * FROM friendships WHERE id = ? AND requester_id = ? AND status = 'pending'").get(requestId, userId);
       if (!row) throw new HttpError(404, 'not-found', 'ไม่พบคำขอเป็นเพื่อนนี้');
-      db.prepare("UPDATE friendships SET status = 'cancelled', ended_at = ? WHERE id = ?").run(now(), requestId);
-      log(userId, 'friend.cancel', row.addressee_id, ip);
+      await db.prepare("UPDATE friendships SET status = 'cancelled', ended_at = ? WHERE id = ?").run(now(), requestId);
+      await log(userId, 'friend.cancel', row.addressee_id, ip);
       return { status: 'none' };
     },
 
-    remove(userId, friendId, ip) {
-      const row = openRequest(userId, friendId);
+    async remove(userId, friendId, ip) {
+      const row = await openRequest(userId, friendId);
       if (row?.status !== 'accepted') throw new HttpError(404, 'not-friends', 'คุณไม่ได้เป็นเพื่อนกับผู้ใช้นี้');
-      db.prepare("UPDATE friendships SET status = 'removed', ended_at = ? WHERE id = ?").run(now(), row.id);
-      log(userId, 'friend.remove', friendId, ip);
+      await db.prepare("UPDATE friendships SET status = 'removed', ended_at = ? WHERE id = ?").run(now(), row.id);
+      await log(userId, 'friend.remove', friendId, ip);
       return { status: 'none' };
     },
 
     // Blocking someone also ends a friendship or pending request between the two.
-    endAll(userId, otherId, ip) {
-      const row = openRequest(userId, otherId);
+    async endAll(userId, otherId, ip) {
+      const row = await openRequest(userId, otherId);
       if (!row) return;
-      db.prepare('UPDATE friendships SET status = ?, ended_at = ? WHERE id = ?').run(row.status === 'accepted' ? 'removed' : 'cancelled', now(), row.id);
-      log(userId, row.status === 'accepted' ? 'friend.remove' : 'friend.cancel', otherId, ip);
+      await db.prepare('UPDATE friendships SET status = ?, ended_at = ? WHERE id = ?').run(row.status === 'accepted' ? 'removed' : 'cancelled', now(), row.id);
+      await log(userId, row.status === 'accepted' ? 'friend.remove' : 'friend.cancel', otherId, ip);
     },
 
     // "People you may know": friends of friends and people from the same activities, then shared interests.
     // Only existing connections and interests the person entered are used; no year, faculty or other trait.
-    suggestions(userId, limit = 5) {
-      const me = activeUser(userId);
+    async suggestions(userId, limit = 5) {
+      const me = await activeUser(userId);
       if (!me) return [];
-      const excluded = new Set([userId, ...db.prepare(`SELECT CASE WHEN requester_id = ? THEN addressee_id ELSE requester_id END AS id FROM friendships
-        WHERE status IN ('pending','accepted') AND (requester_id = ? OR addressee_id = ?)`).all(userId, userId, userId).map(r => r.id),
-        ...db.prepare('SELECT blocked_id AS id FROM blocks WHERE blocker_id = ? AND removed_at IS NULL').all(userId).map(r => r.id),
-        ...db.prepare('SELECT blocker_id AS id FROM blocks WHERE blocked_id = ? AND removed_at IS NULL').all(userId).map(r => r.id)]);
+      const ids = async (sql, ...args) => (await db.prepare(sql).all(...args)).map(r => r.id);
+      const excluded = new Set([userId,
+        ...await ids(`SELECT CASE WHEN requester_id = ? THEN addressee_id ELSE requester_id END AS id FROM friendships
+          WHERE status IN ('pending','accepted') AND (requester_id = ? OR addressee_id = ?)`, userId, userId, userId),
+        ...await ids('SELECT blocked_id AS id FROM blocks WHERE blocker_id = ? AND removed_at IS NULL', userId),
+        ...await ids('SELECT blocker_id AS id FROM blocks WHERE blocked_id = ? AND removed_at IS NULL', userId)]);
       const scores = new Map();
       const add = (id, points, reason) => {
         if (excluded.has(id)) return;
         const entry = scores.get(id) || { points: 0, reasons: new Set() };
         entry.points += points; entry.reasons.add(reason); scores.set(id, entry);
       };
-      const mine = friendIds(userId);
-      for (const friend of mine) for (const id of friendIds(friend)) add(id, 3, 'mutual');
-      for (const { user_id: id } of db.prepare(`SELECT DISTINCT o.user_id FROM participants c JOIN participants o ON o.activity_id = c.activity_id
+      const mine = await friendIds(userId);
+      for (const friend of mine) for (const id of await friendIds(friend)) add(id, 3, 'mutual');
+      for (const { user_id: id } of await db.prepare(`SELECT DISTINCT o.user_id FROM participants c JOIN participants o ON o.activity_id = c.activity_id
         WHERE c.user_id = ? AND c.status = 'joined' AND o.status = 'joined' AND o.user_id != ?`).all(userId, userId)) add(id, 2, 'activity');
       const interests = profileOf(me).interests;
       if (interests.length) {
-        for (const row of db.prepare("SELECT * FROM users WHERE status = 'active' AND username IS NOT NULL AND id != ? ORDER BY created_at DESC LIMIT 200").all(userId)) {
+        for (const row of await db.prepare("SELECT * FROM users WHERE status = 'active' AND username IS NOT NULL AND id != ? ORDER BY created_at DESC LIMIT 200").all(userId)) {
           if (profileOf(row).interests.some(item => interests.includes(item))) add(row.id, 1, 'interest');
         }
       }
-      return [...scores.entries()].sort((a, b) => b[1].points - a[1].points)
-        .map(([id, entry]) => ({ row: activeUser(id), entry }))
-        .filter(({ row }) => row?.username).slice(0, limit)
-        .map(({ row, entry }) => ({ ...card(row), reasons: [...entry.reasons] }));
+      const ranked = [...scores.entries()].sort((a, b) => b[1].points - a[1].points);
+      const result = [];
+      for (const [id, entry] of ranked) {
+        const row = await activeUser(id);
+        if (row?.username) result.push({ ...card(row), reasons: [...entry.reasons] });
+        if (result.length >= limit) break;
+      }
+      return result;
     },
   };
   return social;

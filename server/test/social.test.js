@@ -1,10 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { fixture, TEST_CONFIG } from './helpers.js';
-import { runMinuteJobs, runBackup, runMaintenance } from '../maintenance.js';
+import { runMinuteJobs, runMaintenance } from '../maintenance.js';
 import { loadConfig } from '../config.js';
 
 const future = (hours = 24) => new Date(Date.now() + hours * 3_600_000).toISOString();
@@ -12,7 +9,7 @@ const activity = (extra = {}, hours = 24) => ({
   type: 'activity', content: 'Come along', locationConsent: true,
   activity: { title: 'Badminton', startsAt: future(hours), location: 'Sports hall', capacity: 6, category: 'sport', ...extra },
 });
-const count = (store, sql, ...args) => store.db.prepare(sql).get(...args).n;
+const count = async (store, sql, ...args) => (await store.db.prepare(sql).get(...args)).n;
 const body = async response => response.json();
 
 test('friend requests: send, accept, list, remove; each step is logged and notified', async t => {
@@ -33,7 +30,7 @@ test('friend requests: send, accept, list, remove; each step is logged and notif
   assert.equal((await f.json(`/api/friends/requests/${requestId}/accept`, 'POST', {}, other)).status, 200);
   const mine = await body(await f.json('/api/friends', 'GET', undefined, f.cookie));
   assert.deepEqual(mine.items.map(u => u.username), ['bbb_1']);
-  assert.equal(count(f.store, "SELECT count(*) AS n FROM action_logs WHERE action IN ('friend.request','friend.accept') AND ip_address != ''"), 2);
+  assert.equal(await count(f.store, "SELECT count(*) AS n FROM action_logs WHERE action IN ('friend.request','friend.accept') AND ip_address != ''"), 2);
   const notes = await body(await f.json('/api/notifications', 'GET', undefined, f.cookie));
   assert.equal(notes.items[0].type, 'friend.accept');
   assert.equal(notes.items[0].actor.username, 'bbb_1');
@@ -132,10 +129,10 @@ test('reminders follow each person settings, are sent once, and completed activi
   result = await runMinuteJobs(f.store.db, { notifier, mailer, security });
   assert.equal(result.reminders, 0, 'once per activity');
 
-  f.store.db.prepare("UPDATE activities SET starts_at = '2000-01-01T00:00:00.000Z' WHERE post_id = ?").run(soon.id);
+  await f.store.db.prepare("UPDATE activities SET starts_at = '2000-01-01T00:00:00.000Z' WHERE post_id = ?").run(soon.id);
   result = await runMinuteJobs(f.store.db, { notifier });
   assert.equal(result.completed, 1);
-  assert.equal(count(f.store, "SELECT count(*) AS n FROM action_logs WHERE action = 'activity.complete'"), 1);
+  assert.equal(await count(f.store, "SELECT count(*) AS n FROM action_logs WHERE action = 'activity.complete'"), 1);
   assert.ok((await body(await f.json(`/api/posts/${soon.id}`, 'GET', undefined, f.cookie))).activity.completedAt);
 });
 
@@ -148,7 +145,7 @@ test('recommendations need their own consent, explain every factor, and accept f
   assert.deepEqual(await body(await f.json('/api/recommendations', 'GET', undefined, f.cookie)), { consent: false, items: [] });
   assert.equal((await f.json('/api/me/consents/ai', 'POST', { accept: true }, f.cookie)).status, 400, 'limitations must be acknowledged');
   assert.equal((await f.json('/api/me/consents/ai', 'POST', { accept: true, acknowledgeLimitations: true }, f.cookie)).status, 200);
-  assert.equal(count(f.store, "SELECT count(*) AS n FROM user_consents WHERE purpose = 'ai-recommendation' AND ip_address != ''"), 1);
+  assert.equal(await count(f.store, "SELECT count(*) AS n FROM user_consents WHERE purpose = 'ai-recommendation' AND ip_address != ''"), 1);
 
   const recs = await body(await f.json('/api/recommendations', 'GET', undefined, f.cookie));
   assert.equal(recs.consent, true);
@@ -187,7 +184,7 @@ test('moderators review reports, suspend with a reason, and lift a suspension on
   const appeals = await body(await f.json('/api/mod/appeals', 'GET', undefined, modCookie));
   assert.equal((await f.json(`/api/mod/appeals/${appeals.items[0].id}/resolve`, 'POST', { outcome: 'lifted', note: 'OK' }, modCookie)).status, 200);
   assert.equal((await f.post({ type: 'text', content: 'back' }, bad)).status, 201);
-  assert.ok(count(f.store, "SELECT count(*) AS n FROM action_logs WHERE action IN ('report.suspend-user','user.suspend','appeal.lifted')") >= 3);
+  assert.ok(await count(f.store, "SELECT count(*) AS n FROM action_logs WHERE action IN ('report.suspend-user','user.suspend','appeal.lifted')") >= 3);
   const reporterNotes = await body(await f.json('/api/notifications', 'GET', undefined, f.cookie));
   assert.equal(reporterNotes.items[0].type, 'report.reviewed');
 });
@@ -200,24 +197,21 @@ test('account deletion ends friendships, and the purge removes them', async t =>
   await f.json(`/api/friends/requests/${requestId}/accept`, 'POST', {}, other);
   await f.json('/api/me/delete', 'POST', { confirmUsername: 'bbb_1' }, other);
   assert.equal((await body(await f.json('/api/friends', 'GET', undefined, f.cookie))).items.length, 0);
-  runMaintenance(f.store.db, new Date(Date.now() + 91 * 86_400_000));
-  assert.equal(count(f.store, 'SELECT count(*) AS n FROM friendships'), 0);
+  await runMaintenance(f.store.db, new Date(Date.now() + 91 * 86_400_000));
+  assert.equal(await count(f.store, 'SELECT count(*) AS n FROM friendships'), 0);
 });
 
-test('security headers are set and backups rotate', async t => {
+test('security headers are set and the database setting is validated', async t => {
   const f = await fixture(t);
   const response = await fetch(`${f.url}/`);
   for (const header of ['content-security-policy', 'x-frame-options', 'permissions-policy', 'cross-origin-opener-policy']) assert.ok(response.headers.get(header), header);
   assert.equal(response.headers.get('strict-transport-security'), null, 'HSTS only in production');
 
-  const dir = mkdtempSync(join(tmpdir(), 'joingun-backup-'));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  const day = 86_400_000, start = Date.now();
-  for (let i = 0; i < 4; i++) runBackup(f.store.db, dir, 2, new Date(start + i * day));
-  assert.equal(readdirSync(dir).length, 2, 'keeps the last two days');
-  assert.equal(runBackup(f.store.db, '', 7), null, 'off without a folder');
-  assert.throws(() => loadConfig({ APP_SECRET: 't'.repeat(48), BACKUP_KEEP_DAYS: 'x' }));
-  assert.ok(TEST_CONFIG().backupKeepDays === 7);
+  const secret = 't'.repeat(48);
+  assert.throws(() => loadConfig({ NODE_ENV: 'production', APP_SECRET: secret, GMAIL_USER: 'a@gmail.com', GMAIL_APP_PASSWORD: 'p' }), /DATABASE_URL is required/);
+  assert.throws(() => loadConfig({ APP_SECRET: secret, DATABASE_URL: 'mysql://x' }), /must start with postgres/);
+  assert.equal(loadConfig({ APP_SECRET: secret, DATABASE_URL: ' postgresql://u:p@h:5432/db ' }).databaseUrl, 'postgresql://u:p@h:5432/db');
+  assert.equal(TEST_CONFIG().databaseUrl, '');
 });
 
 test('the Android app user agent gets a CSP that allows the inline native bridge; browsers keep the strict one', async t => {

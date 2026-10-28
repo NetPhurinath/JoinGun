@@ -77,9 +77,9 @@ export function createAuth(store, { config, mailer, limiter = createRateLimiter(
   const cookieOptions = { httpOnly: true, sameSite: 'lax', secure: config.cookieSecure, path: '/' };
 
   // Attaches req.user (raw row or null) and req.sessionToken to every request.
-  function session(req, res, next) {
+  async function session(req, res, next) {
     req.sessionToken = readCookie(req, SESSION_COOKIE);
-    req.user = accounts.userForSession(req.sessionToken);
+    req.user = await accounts.userForSession(req.sessionToken);
     next();
   }
   const requireSession = (req, res, next) => {
@@ -87,9 +87,9 @@ export function createAuth(store, { config, mailer, limiter = createRateLimiter(
     next();
   };
   // A usable account: current terms accepted and a profile set up.
-  const requireAccount = (req, res, next) => {
+  const requireAccount = async (req, res, next) => {
     if (!req.user) return next(new AuthHttpError(401, 'กรุณาเข้าสู่ระบบก่อน'));
-    if (accounts.toPublicUser(req.user).needs) return next(new AuthHttpError(403, 'กรุณาตั้งค่าบัญชีให้เสร็จก่อน'));
+    if ((await accounts.toPublicUser(req.user)).needs) return next(new AuthHttpError(403, 'กรุณาตั้งค่าบัญชีให้เสร็จก่อน'));
     next();
   };
 
@@ -111,26 +111,26 @@ export function createAuth(store, { config, mailer, limiter = createRateLimiter(
     if (!isAllowedEmail(email, config.emailSuffix)) throw new AuthHttpError(400, `ใช้อีเมลสถานศึกษาที่ลงท้ายด้วย .${config.emailSuffix}`, 'email');
     const emailHash = security.emailHash(email);
     if (!limiter.allow(`code-ip:${req.ip}`, 20, 3_600_000) || !limiter.allow(`code-email-hour:${emailHash}`, 5, 3_600_000)) {
-      accounts.log({ emailHash, action: 'code.request', status: 'rate-limited', ip: req.ip });
+      await accounts.log({ emailHash, action: 'code.request', status: 'rate-limited', ip: req.ip });
       throw new AuthHttpError(429, 'ขอรหัสบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่');
     }
     if (!limiter.allow(`code-email:${emailHash}`, 1, config.resendSeconds * 1000)) {
       throw new AuthHttpError(429, `ขอรหัสใหม่ได้หลังจาก ${config.resendSeconds} วินาที`);
     }
-    const code = accounts.issueCode(emailHash);
+    const code = await accounts.issueCode(emailHash);
     try {
       await mailer.send({ to: email, ...codeEmail(code, config.codeMinutes) });
     } catch (error) {
-      accounts.log({ emailHash, action: 'code.request', status: 'mail-failed', ip: req.ip });
+      await accounts.log({ emailHash, action: 'code.request', status: 'mail-failed', ip: req.ip });
       if (error instanceof MailError) console.error('Mail failed:', error.message);
       throw new AuthHttpError(503, 'ส่งอีเมลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
     }
-    accounts.log({ emailHash, action: 'code.request', status: 'sent', ip: req.ip });
+    await accounts.log({ emailHash, action: 'code.request', status: 'sent', ip: req.ip });
     // Same answer whether or not an account exists, so addresses cannot be probed.
     res.status(202).json({ resendAfter: config.resendSeconds, expiresInMinutes: config.codeMinutes });
   });
 
-  router.post('/verify', (req, res) => {
+  router.post('/verify', async (req, res) => {
     const { email: raw, code } = only(req.body, ['email', 'code']);
     const email = normalizeEmail(raw);
     if (!isAllowedEmail(email, config.emailSuffix) || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
@@ -138,50 +138,50 @@ export function createAuth(store, { config, mailer, limiter = createRateLimiter(
     }
     const emailHash = security.emailHash(email);
     if (!limiter.allow(`verify-ip:${req.ip}`, 30, 600_000)) throw new AuthHttpError(429, 'ลองบ่อยเกินไป กรุณารอสักครู่');
-    const result = accounts.checkCode(emailHash, code);
+    const result = await accounts.checkCode(emailHash, code);
     if (result !== 'ok') {
-      accounts.log({ emailHash, action: 'login', status: result === 'wrong' ? 'failure-wrong-code' : 'failure-expired-code', ip: req.ip });
+      await accounts.log({ emailHash, action: 'login', status: result === 'wrong' ? 'failure-wrong-code' : 'failure-expired-code', ip: req.ip });
       throw new AuthHttpError(400, result === 'wrong' ? 'รหัสไม่ถูกต้อง ลองใหม่อีกครั้ง' : 'รหัสหมดอายุหรือกรอกผิดเกินจำนวนครั้ง กรุณาขอรหัสใหม่', 'code');
     }
-    const { user, created } = accounts.findOrCreateUser(email, emailHash);
+    const { user, created } = await accounts.findOrCreateUser(email, emailHash);
     if (user.status === 'deleted') throw new AuthHttpError(403, 'บัญชีนี้ถูกปิดแล้ว');
-    if (config.moderatorEmails.includes(email)) accounts.makeModerator(user.id);
-    if (req.sessionToken) accounts.endSession(req.sessionToken);
-    const token = accounts.createSession(user.id, req.ip);
-    accounts.log({ userId: user.id, emailHash, action: created ? 'signup' : 'login', status: 'success', ip: req.ip });
+    if (config.moderatorEmails.includes(email)) await accounts.makeModerator(user.id);
+    if (req.sessionToken) await accounts.endSession(req.sessionToken);
+    const token = await accounts.createSession(user.id, req.ip);
+    await accounts.log({ userId: user.id, emailHash, action: created ? 'signup' : 'login', status: 'success', ip: req.ip });
     res.cookie(SESSION_COOKIE, token, { ...cookieOptions, maxAge: config.sessionDays * 86_400_000 });
-    const publicUser = accounts.toPublicUser(accounts.getUser(user.id));
+    const publicUser = await accounts.toPublicUser(await accounts.getUser(user.id));
     res.json(publicUser.needs ? { status: publicUser.needs === 'terms' ? 'needs-terms' : 'needs-profile' } : { status: 'signed-in', user: publicUser });
   });
 
-  router.post('/terms', requireSession, (req, res) => {
+  router.post('/terms', requireSession, async (req, res) => {
     const { termsVersion, privacyVersion } = only(req.body, ['termsVersion', 'privacyVersion']);
     if (termsVersion !== config.termsVersion || privacyVersion !== config.privacyVersion) {
       throw new AuthHttpError(409, 'ข้อตกลงมีการเปลี่ยนแปลง กรุณาโหลดหน้าใหม่แล้วอ่านอีกครั้ง');
     }
-    accounts.acceptTerms(req.user.id, req.ip);
+    await accounts.acceptTerms(req.user.id, req.ip);
     res.status(204).end();
   });
 
-  router.post('/logout', (req, res) => {
+  router.post('/logout', async (req, res) => {
     if (req.sessionToken) {
-      if (req.user) accounts.log({ userId: req.user.id, action: 'logout', status: 'success', ip: req.ip });
-      accounts.endSession(req.sessionToken);
+      if (req.user) await accounts.log({ userId: req.user.id, action: 'logout', status: 'success', ip: req.ip });
+      await accounts.endSession(req.sessionToken);
     }
     res.clearCookie(SESSION_COOKIE, cookieOptions).status(204).end();
   });
 
   const me = Router();
-  me.get('/', requireSession, (req, res) => res.json(accounts.toPublicUser(req.user)));
-  me.put('/', requireSession, (req, res) => {
-    if (accounts.toPublicUser(req.user).needs === 'terms') throw new AuthHttpError(403, 'กรุณายอมรับข้อตกลงก่อน');
+  me.get('/', requireSession, async (req, res) => res.json(await accounts.toPublicUser(req.user)));
+  me.put('/', requireSession, async (req, res) => {
+    if ((await accounts.toPublicUser(req.user)).needs === 'terms') throw new AuthHttpError(403, 'กรุณายอมรับข้อตกลงก่อน');
     const profile = validateProfile(req.body);
-    if (accounts.usernameTaken(profile.username, req.user.id)) throw new AuthHttpError(409, 'ชื่อผู้ใช้นี้มีคนใช้แล้ว', 'username');
+    if (await accounts.usernameTaken(profile.username, req.user.id)) throw new AuthHttpError(409, 'ชื่อผู้ใช้นี้มีคนใช้แล้ว', 'username');
     try {
-      res.json(accounts.toPublicUser(accounts.saveProfile(req.user.id, profile, req.ip)));
+      res.json(await accounts.toPublicUser(await accounts.saveProfile(req.user.id, profile, req.ip)));
     } catch (error) {
-      // Two people picking the same username at the same moment: the UNIQUE constraint decides.
-      if (/UNIQUE constraint failed: users\.username/.test(error.message)) throw new AuthHttpError(409, 'ชื่อผู้ใช้นี้มีคนใช้แล้ว', 'username');
+      // Two people picking the same username at the same moment: the UNIQUE constraint decides (SQLSTATE 23505).
+      if (error.code === '23505' && /username/.test(`${error.constraint ?? ''} ${error.message}`)) throw new AuthHttpError(409, 'ชื่อผู้ใช้นี้มีคนใช้แล้ว', 'username');
       throw error;
     }
   });
