@@ -338,6 +338,8 @@ export const openDatabaseFromEnv = (env, localFolder) => openDatabase(env.DATABA
 export async function openDatabase(target, options = {}) {
   const backend = /^postgres(ql)?:\/\//i.test(target) ? await openPostgres(target, options) : await openPglite(target);
   const db = wrap(backend);
+  // options.reset (tests only, with a throw-away PostgreSQL database): start from an empty schema.
+  if (options.reset) await db.exec('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
   await db.exec(SCHEMA);
   // The first placeholder is the viewer's user id (or null), so each post says whether the viewer takes part.
   const select = `SELECT p.*, a.title, a.starts_at, a.location, a.capacity, a.category, a.meeting, a.lat, a.lng, a.completed_at,

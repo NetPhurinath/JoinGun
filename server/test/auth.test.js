@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fixture, TEST_CONFIG } from './helpers.js';
+import { fixture, openTestDatabase, TEST_CONFIG } from './helpers.js';
 import { isAllowedEmail } from '../auth.js';
 import { createSecurity } from '../security.js';
 
@@ -124,9 +124,8 @@ test('posting requires a signed-in account; foreign origins and mail failures ar
 
 test('a failed email send returns 503 and is logged without the address', async t => {
   const { createApp } = await import('../app.js');
-  const { openDatabase } = await import('../database.js');
   const { once } = await import('node:events');
-  const store = await openDatabase(':memory:');
+  const store = await openTestDatabase();
   const server = createApp(store, { config: TEST_CONFIG(), mailer: { async send() { const { MailError } = await import('../mailer.js'); throw new MailError('down'); } } }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(async () => { await new Promise(resolve => server.close(resolve)); await store.close(); });

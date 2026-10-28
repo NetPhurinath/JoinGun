@@ -6,7 +6,7 @@
 | --- | --- |
 | สถานะ | **สำหรับให้ทีมตรวจและส่ง** ปรับตามสไลด์รายวิชา *Post-Midterm Plan* (2569): ส่ง Test Plan ก่อนวันพุธที่ 28 ต.ค. 2026, ทดสอบกับผู้ใช้จริงวันพุธที่ 4 พ.ย. 2026, นำเสนอ final วันที่ 11 หรือ 18 พ.ย. 2026 เป้าหมายและการมอบหมายบทบาทยังเป็นข้อเสนอ จนกว่า Product Owner (ขอบเขต, เป้าหมายการยอมรับ) และ Tech Lead (เครื่องมือ, สภาพแวดล้อม) จะยืนยัน |
 | เวอร์ชัน | 0.2, 2026-10-28 (0.1 คือ 2026-10-27) |
-| Build ที่ทดสอบ | 0.3.0 (web UI ใน `web/`, เซิร์ฟเวอร์ Express + SQLite ใน `server/`, แอป Android ด้วย Capacitor ใน `android/`) |
+| Build ที่ทดสอบ | 0.3.0 (web UI ใน `web/`, เซิร์ฟเวอร์ Express + PostgreSQL ใน `server/`, แอป Android ด้วย Capacitor ใน `android/`) |
 | ผู้รับผิดชอบแผน | QA/Test (Parinya Chotchungtakul) — ข้อเสนอ |
 | ที่มาของวิธีการ | สไลด์รายวิชา *Post-Midterm Plan* (เนื้อหาที่ Test Plan ต้องมี รูปแบบ session ตัวชี้วัด ตารางเวลา) และ *From a spec to a working MVP* (กรณีศึกษา CoffeeAI, Layer 4 "Proven": ทุก Must-have มี test ที่ระบุ requirement ของตัวเอง และมี `test-report.md` ที่จับคู่แต่ละ test กับเกณฑ์การยอมรับ สิ่งที่ยังทำไม่ได้ให้ระบุเป็น known gap ไม่ซ่อนไว้) |
 | การใช้ AI | ใช้ — ดู [§12 การใช้ AI](#12-การใช้-ai) |
@@ -55,7 +55,7 @@ MUST workflow ที่ล็อกไว้คือ **"เข้าร่ว�
 ระดับการทดสอบเป็นไปตาม Testing Pyramid ของรายวิชา (Unit → Integration → E2E แล้วจึง UAT กับผู้ใช้จริง):
 
 - **Unit / ระดับโมดูล:** test ที่เรียกโมดูลของเซิร์ฟเวอร์โดยตรง — `profile-crypto.test.js` (การเข้ารหัสฟิลด์) และฟังก์ชันด้าน security และ auth ที่ `auth.test.js` เรียกโดยตรง ยังไม่มี unit test แบบแยกขาดจริง ๆ ชั้นนี้จึงบางที่สุด
-- **Integration:** test ส่วนใหญ่ใน 47 tests ของ `server/test/` เปิดแอป Express จริงบนฐานข้อมูล SQLite ชั่วคราวแล้วเรียก HTTP API จึงตรวจการตรวจข้อมูล การควบคุมสิทธิ์ บันทึก และ transaction ไปพร้อมกัน
+- **Integration:** test ส่วนใหญ่ใน 47 tests ของ `server/test/` เปิดแอป Express จริงบนฐานข้อมูล PostgreSQL ชั่วคราว (PGlite)แล้วเรียก HTTP API จึงตรวจการตรวจข้อมูล การควบคุมสิทธิ์ บันทึก และ transaction ไปพร้อมกัน
 - **E2E:** UI จริงทำงานกับเซิร์ฟเวอร์จริง (Playwright เมื่อได้รับอนุมัติ ระหว่างนี้ทำขั้นตอนเดียวกันด้วยมือ)
 - **UAT:** นักศึกษาจริงทำ core workflow (§5)
 
@@ -137,7 +137,7 @@ MUST workflow ที่ล็อกไว้คือ **"เข้าร่ว�
 | TC-SAFE-07 | LR5 | ตรวจทุกฟอร์ม payload ของ API และตาราง | ไม่มีฟิลด์เลขบัตรประชาชน ที่อยู่บ้าน หรือศาสนา | L4 | checklist การตรวจ (§4.8) | ยังไม่ได้รัน |
 | TC-SAFE-08 | rule.md ETA (การพบคนแปลกหน้า) | เปิดรายละเอียดกิจกรรมและแผงเข้าร่วม | แสดงคำแนะนำด้านความปลอดภัย ไม่มีข้อความที่บอกว่าการยืนยันอีเมลหรือการแนะนำรับประกันตัวตนหรือความปลอดภัย | L2 | ด้วยมือ / Planned E2E ตรวจข้อความ | ยังไม่ได้รัน |
 | TC-SAFE-09 | rule.md ETA (การตรวจสอบโดยมนุษย์) | ผู้ดูแลยกเลิกรายงาน ลบโพสต์ ระงับบัญชีพร้อมเหตุผล ผู้ใช้อุทธรณ์ | ผู้ใช้เห็นเหตุผล ผู้ใช้ที่ถูกระงับยังอ่าน ตั้งค่า ดาวน์โหลดข้อมูล ลบบัญชี และอุทธรณ์ได้ | L1 | social.test.js — "moderators review reports, suspend with a reason…" | ผ่าน 2026-10-28 |
-| TC-SAFE-10 | ความปลอดภัย | อ่าน header ของ response และรัน backup เกิน 7 วัน | มี security headers เก็บ backup 7 วัน | L1 | social.test.js — "security headers are set and backups rotate" | ผ่าน 2026-10-28 |
+| TC-SAFE-10 | ความปลอดภัย | อ่าน header ของ response และตรวจค่า DATABASE_URL | มี security headers; production ต้องมี DATABASE_URL (backup ย้ายไปเป็นของ Railway ตั้งแต่ 2026-10-29 ไม่ได้ทดสอบ) | L1 | social.test.js — "security headers are set and the database setting is validated" | ผ่าน 2026-10-29 (PGlite) |
 | TC-SAFE-11 | ความปลอดภัย | ส่งคำขอเขียนข้อมูลจาก `Origin` ภายนอก | ถูกปฏิเสธ | L1 | auth.test.js — "posting requires a signed-in account; foreign origins…" | ผ่าน 2026-10-28 |
 
 ### 4.6 การควบคุมสิทธิ์ (ใครทำอะไรได้)

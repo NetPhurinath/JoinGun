@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | **For team review and submission.** Revised against the course *Post-Midterm Plan* (2569): Test Plan due before Wed 28 Oct 2026, testing with real users on Wed 4 Nov 2026, final presentation on 11 or 18 Nov 2026. Targets and role assignments are still proposals until the Product Owner (scope, acceptance targets) and Tech Lead (tools, environment) confirm them. |
 | Version | 0.2, 2026-10-28 (0.1 was 2026-10-27) |
-| Build under test | 0.3.0 (web UI in `web/`, Express + SQLite server in `server/`, Capacitor Android app in `android/`) |
+| Build under test | 0.3.0 (web UI in `web/`, Express + PostgreSQL server in `server/`, Capacitor Android app in `android/`) |
 | Plan owner | QA/Test (Parinya Chotchungtakul) — proposed |
 | Method sources | Course deck *Post-Midterm Plan* (Test Plan contents, session format, metrics, schedule) and *From a spec to a working MVP* (CoffeeAI case, Layer 4 "Proven": every Must-have has a test that names its requirement, and a `test-report.md` maps each test to an acceptance criterion; what cannot be met yet is listed as a known gap instead of hidden). |
 | AI use | Yes — see [§12 Use of AI](#12-use-of-ai). |
@@ -53,7 +53,7 @@ The locked MUST workflow is **"join an activity from the feed"** ([feature list]
 The levels follow the Testing Pyramid from the course (Unit → Integration → E2E, then UAT with real users):
 
 - **Unit / module level:** tests that call server modules directly — `profile-crypto.test.js` (field encryption) and the security and auth helpers used directly in `auth.test.js`. There are no isolated pure unit tests yet; this is the thinnest layer.
-- **Integration:** most of the 47 tests in `server/test/` start the real Express app on a temporary SQLite database and call the HTTP API, so they check validation, access control, records and transactions together.
+- **Integration:** most of the 47 tests in `server/test/` start the real Express app on a temporary PostgreSQL database (PGlite) and call the HTTP API, so they check validation, access control, records and transactions together.
 - **E2E:** the real UI driving the real server (Playwright when approved; until then the same steps by hand).
 - **UAT:** real students completing the core workflow (§5).
 
@@ -135,7 +135,7 @@ Each case names its requirement, as the method deck asks. **Steps / test data** 
 | TC-SAFE-07 | LR5 | Inspect every form, API payload and table | No national ID, home address or religion field | L4 | Inspection checklist (§4.8) | Not run |
 | TC-SAFE-08 | rule.md ETA (meeting strangers) | Open an activity detail and the join panel | Safety guidance shown; no wording that email verification or recommendations guarantee identity or safety | L2 | Manual / planned E2E text check | Not run |
 | TC-SAFE-09 | rule.md ETA (human review) | Moderator dismisses, removes, suspends with a reason; user appeals | Reason shown to user; suspended user can still read, change settings, download data, delete account and appeal | L1 | social.test.js — "moderators review reports, suspend with a reason…" | Pass 2026-10-28 |
-| TC-SAFE-10 | Security | Read response headers; run backups for more than 7 days | Security headers present; backups kept 7 days | L1 | social.test.js — "security headers are set and backups rotate" | Pass 2026-10-28 |
+| TC-SAFE-10 | Security | Read response headers; check the DATABASE_URL setting | Security headers present; production requires DATABASE_URL (backups are Railway's since 2026-10-29 and are not tested) | L1 | social.test.js — "security headers are set and the database setting is validated" | Pass 2026-10-29 (PGlite) |
 | TC-SAFE-11 | Security | Send a write request with a foreign `Origin` | Refused | L1 | auth.test.js — "posting requires a signed-in account; foreign origins…" | Pass 2026-10-28 |
 
 ### 4.6 Access control (who can do what)

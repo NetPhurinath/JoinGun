@@ -6,10 +6,16 @@ import { loadConfig } from '../config.js';
 
 export const TEST_CONFIG = () => loadConfig({ APP_SECRET: 't'.repeat(48) });
 
+// A fresh database for one test: in-memory PGlite, or, when TEST_DATABASE_URL names a throw-away PostgreSQL database
+// (CI does this), that database with its schema recreated. Use the second form with --test-concurrency=1.
+export const openTestDatabase = () => process.env.TEST_DATABASE_URL
+  ? openDatabase(process.env.TEST_DATABASE_URL, { reset: true, ssl: 'false' })
+  : openDatabase(':memory:');
+
 // Starts the app on a random port with an in-memory database (PGlite, real PostgreSQL SQL) and a mailer that records
 // codes instead of sending.
 export async function fixture(t, { config = TEST_CONFIG() } = {}) {
-  const store = await openDatabase(':memory:');
+  const store = await openTestDatabase();
   const sent = [];
   const mailer = { async send(message) { sent.push({ ...message, code: message.subject.match(/(\d{6})$/)[1] }); } };
   const server = createApp(store, { config, mailer }).listen(0,'127.0.0.1');

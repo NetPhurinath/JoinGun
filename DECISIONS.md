@@ -93,13 +93,21 @@ The Tech Lead chose Railway for hosting and Railway's PostgreSQL for the databas
 | 44 | The app no longer makes its own database backups (`VACUUM INTO`, `BACKUP_*` removed). Backups are Railway's. | `VACUUM INTO` does not exist in PostgreSQL. What Railway's plan keeps, and for how long, is not yet checked; purged accounts leave Railway backups only when those backups expire. | Railway project settings |
 | 45 | Schema starts empty with every column in one `CREATE TABLE IF NOT EXISTS` set. The additive `ALTER` migrations and the plain-to-encrypted profile migration at start-up were removed. | No old data to carry over (Tech Lead, 2026-10-29). Later schema changes will need a real migration step. | `server/database.js` |
 
+### Proposed on 2026-10-29 (the Tech Lead asked for a sensible default; the Product Owner still has to confirm)
+
+| # | Decision | Why | Where to change |
+| --- | --- | --- | --- |
+| 46 | **Retention schedule (written, not yet automated).** Access and action logs (`audit_logs`, `auth_logs`, `action_logs`): keep 365 days, then delete. Consent and terms records (`consent_records`, `user_consents`, `consent_withdrawals`, `terms_acceptances`) and reports with their reviews: keep while the account exists and 365 days after it is purged, then delete. The encrypted email of a deleted account: 90 days (already in `maintenance.js`). Notifications: 180 days (already). | rule.md asks for at least 90 days; 365 days leaves room for a safety investigation without keeping personal data indefinitely. No deletion job exists yet because removing evidence cannot be undone: add it only after the Product Owner confirms the periods. | `server/maintenance.js` (future job), this table |
+| 47 | **Encryption at rest.** Rely on the application-level encryption that already exists (email, year, interests, bio with AES-256-GCM) plus whatever Railway applies to its database volumes. Do not claim whole-database encryption. | Display names and usernames must stay searchable; the project cannot verify Railway's disk encryption from the code, so it is recorded as the provider's, to be confirmed from Railway's documentation before real personal data is collected. | Railway project; `server/profile-crypto.js` |
+| 48 | CI runs the tests twice: on PGlite (`test`) and on a real PostgreSQL 17 service (`test-postgres`, `TEST_DATABASE_URL`, one file at a time). | PGlite is not the server Railway runs; the second job is the check that the SQL works on the real engine. | `.github/workflows/test.yml`, `server/test/helpers.js` |
+
 ## Still open (not decided here)
 
 - Domain, monthly budget (Tech Lead), and whether Railway's disk and database encryption is enough (the disk-encryption question in decision 24).
 - What Railway's plan keeps as database backups, and for how long.
 - Whether to add Firebase Cloud Messaging for server-sent push in the app (needs a Firebase project).
 - Building and testing the Android app on a real phone (needs Android Studio).
-- A written retention schedule for logs and records kept after an account is purged (Product Owner).
+- Confirm the proposed retention periods (decision 46) and add the deletion job (Product Owner).
 - Whether the first public release stops at step 7 (Product Owner).
 - Legal review of the draft terms and privacy policy.
 - QA on real phones (QA/Test) and the pilot itself (step 8).

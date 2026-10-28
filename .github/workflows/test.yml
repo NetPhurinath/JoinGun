@@ -13,6 +13,29 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+  # The same tests on a real PostgreSQL server (the engine Railway runs), one test file at a time on one database.
+  test-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: joingun_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/joingun_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test --test-concurrency=1 server/test/*.test.js
   e2e:
     runs-on: ubuntu-latest
     steps:
