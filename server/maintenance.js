@@ -3,7 +3,7 @@
 //     sign-in logs, and the content of their posts is cleared, so the remaining rows no longer identify anyone
 //   - expired sign-in codes and sessions are deleted
 // Access/traffic logs themselves are kept; nothing here removes a log row (rule.md: at least 90 days).
-// Database backups are not made here: the PostgreSQL service (Railway) keeps them.
+// Database backups are not made here: the PostgreSQL service (Render) keeps them.
 import { randomUUID } from 'node:crypto';
 import { reminderEmail } from './notifications.js';
 

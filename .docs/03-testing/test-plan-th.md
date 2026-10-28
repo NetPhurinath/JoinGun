@@ -137,7 +137,7 @@ MUST workflow ที่ล็อกไว้คือ **"เข้าร่ว�
 | TC-SAFE-07 | LR5 | ตรวจทุกฟอร์ม payload ของ API และตาราง | ไม่มีฟิลด์เลขบัตรประชาชน ที่อยู่บ้าน หรือศาสนา | L4 | checklist การตรวจ (§4.8) | ยังไม่ได้รัน |
 | TC-SAFE-08 | rule.md ETA (การพบคนแปลกหน้า) | เปิดรายละเอียดกิจกรรมและแผงเข้าร่วม | แสดงคำแนะนำด้านความปลอดภัย ไม่มีข้อความที่บอกว่าการยืนยันอีเมลหรือการแนะนำรับประกันตัวตนหรือความปลอดภัย | L2 | ด้วยมือ / Planned E2E ตรวจข้อความ | ยังไม่ได้รัน |
 | TC-SAFE-09 | rule.md ETA (การตรวจสอบโดยมนุษย์) | ผู้ดูแลยกเลิกรายงาน ลบโพสต์ ระงับบัญชีพร้อมเหตุผล ผู้ใช้อุทธรณ์ | ผู้ใช้เห็นเหตุผล ผู้ใช้ที่ถูกระงับยังอ่าน ตั้งค่า ดาวน์โหลดข้อมูล ลบบัญชี และอุทธรณ์ได้ | L1 | social.test.js — "moderators review reports, suspend with a reason…" | ผ่าน 2026-10-28 |
-| TC-SAFE-10 | ความปลอดภัย | อ่าน header ของ response และตรวจค่า DATABASE_URL | มี security headers; production ต้องมี DATABASE_URL (backup ย้ายไปเป็นของ Railway ตั้งแต่ 2026-10-29 ไม่ได้ทดสอบ) | L1 | social.test.js — "security headers are set and the database setting is validated" | ผ่าน 2026-10-29 (PGlite) |
+| TC-SAFE-10 | ความปลอดภัย | อ่าน header ของ response และตรวจค่า DATABASE_URL | มี security headers; production ต้องมี DATABASE_URL (backup ย้ายไปเป็นของผู้ให้บริการ hosting ตั้งแต่ 2026-10-29 ไม่ได้ทดสอบ) | L1 | social.test.js — "security headers are set and the database setting is validated" | ผ่าน 2026-10-29 (PGlite) |
 | TC-SAFE-11 | ความปลอดภัย | ส่งคำขอเขียนข้อมูลจาก `Origin` ภายนอก | ถูกปฏิเสธ | L1 | auth.test.js — "posting requires a signed-in account; foreign origins…" | ผ่าน 2026-10-28 |
 
 ### 4.6 การควบคุมสิทธิ์ (ใครทำอะไรได้)

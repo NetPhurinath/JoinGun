@@ -38,7 +38,7 @@ export function loadConfig(env = process.env, { devSecretFile } = {}) {
   const host = env.HOST || '127.0.0.1';
   if (!/^[a-zA-Z0-9.:[\]-]+$/.test(host)) throw new Error('Invalid HOST.');
 
-  // PostgreSQL connection URL (Railway sets DATABASE_URL). Without it, development and tests use a local PGlite database.
+  // PostgreSQL connection URL (Render sets DATABASE_URL from render.yaml). Without it, development and tests use a local PGlite database.
   const databaseUrl = (env.DATABASE_URL || '').trim();
   if (production && !databaseUrl) throw new Error('DATABASE_URL is required in production.');
   if (databaseUrl && !/^postgres(ql)?:\/\//i.test(databaseUrl)) throw new Error('DATABASE_URL must start with postgres:// or postgresql://.');

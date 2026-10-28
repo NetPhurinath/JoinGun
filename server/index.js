@@ -20,7 +20,7 @@ if (useGmail) {
   catch { throw new Error('nodemailer is not installed. Run "npm install" in the project folder, then start again.'); }
   mailer = createGmailMailer({ user: config.gmailUser, appPassword: config.gmailAppPassword, fromName: config.mailFromName }, nodemailer.createTransport);
 }
-// PostgreSQL when DATABASE_URL is set (Railway); otherwise a local PGlite database in data/ for development.
+// PostgreSQL when DATABASE_URL is set (Render); otherwise a local PGlite database in data/ for development.
 const databaseTarget = config.databaseUrl || fileURLToPath(new URL('pglite/', dataDir));
 const store = await openDatabase(databaseTarget, { ssl: config.databaseSsl });
 const app = createApp(store, { config, mailer });

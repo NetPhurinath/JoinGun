@@ -1,0 +1,44 @@
+# Render Blueprint: one web service and one PostgreSQL database in the same region (Singapore, closest to Thailand).
+# Free plans for the first test (Tech Lead, 2026-10-29): the web service sleeps after about 15 idle minutes, so the
+# minute and daily jobs only run while it is awake, and a free database expires about 30 days after it is created.
+services:
+  - type: web
+    name: joingun
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: TRUST_PROXY
+        value: "true"
+      # Internal address (no dot in the host name, no TLS needed on Render's private network).
+      - key: DATABASE_URL
+        fromDatabase:
+          name: joingun-db
+          property: connectionString
+      # Generated once by Render. Never change it afterwards: existing accounts would become unreachable.
+      - key: APP_SECRET
+        generateValue: true
+      # Filled in on the Render dashboard; never commit them.
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: MODERATOR_EMAILS
+        sync: false
+
+databases:
+  - name: joingun-db
+    plan: free
+    region: singapore
+    postgresMajorVersion: "17"
+    # Only Render services in this account can connect; no access from the internet.
+    ipAllowList: []

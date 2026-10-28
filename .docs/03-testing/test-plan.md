@@ -135,7 +135,7 @@ Each case names its requirement, as the method deck asks. **Steps / test data** 
 | TC-SAFE-07 | LR5 | Inspect every form, API payload and table | No national ID, home address or religion field | L4 | Inspection checklist (§4.8) | Not run |
 | TC-SAFE-08 | rule.md ETA (meeting strangers) | Open an activity detail and the join panel | Safety guidance shown; no wording that email verification or recommendations guarantee identity or safety | L2 | Manual / planned E2E text check | Not run |
 | TC-SAFE-09 | rule.md ETA (human review) | Moderator dismisses, removes, suspends with a reason; user appeals | Reason shown to user; suspended user can still read, change settings, download data, delete account and appeal | L1 | social.test.js — "moderators review reports, suspend with a reason…" | Pass 2026-10-28 |
-| TC-SAFE-10 | Security | Read response headers; check the DATABASE_URL setting | Security headers present; production requires DATABASE_URL (backups are Railway's since 2026-10-29 and are not tested) | L1 | social.test.js — "security headers are set and the database setting is validated" | Pass 2026-10-29 (PGlite) |
+| TC-SAFE-10 | Security | Read response headers; check the DATABASE_URL setting | Security headers present; production requires DATABASE_URL (backups are the hosting provider's since 2026-10-29 and are not tested) | L1 | social.test.js — "security headers are set and the database setting is validated" | Pass 2026-10-29 (PGlite) |
 | TC-SAFE-11 | Security | Send a write request with a foreign `Origin` | Refused | L1 | auth.test.js — "posting requires a signed-in account; foreign origins…" | Pass 2026-10-28 |
 
 ### 4.6 Access control (who can do what)

@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { HttpError } from './errors.js';
 
 // Everything stored in the database goes through the small async API below, whichever engine runs underneath:
-//   - PostgreSQL (Railway) through `pg`, when the target is a postgres:// URL (production);
+//   - PostgreSQL (Render) through `pg`, when the target is a postgres:// URL (production);
 //   - PGlite (PostgreSQL compiled to WebAssembly) for development and tests, when the target is a folder or ':memory:'.
 // SQL is written with "?" placeholders; they are turned into $1, $2, … here. Inside db.transaction() use only the
 // `tx` object the callback receives: a query on the outer `db` runs on another connection and cannot see the changes.
@@ -36,19 +36,20 @@ function wrap(backend) {
   };
 }
 
-// Railway's private network (…railway.internal) and local servers need no TLS; Railway's public proxy does.
+// Local servers and Render's private network (internal host names have no dot, e.g. dpg-…-a) need no TLS;
+// Render's external address (…render.com) does.
 function sslFor(url, override) {
   if (override === 'false' || override === '0') return false;
   if (override === 'true' || override === '1') return { rejectUnauthorized: false };
   const host = new URL(url).hostname;
-  return /(^localhost$|^127\.|^\[?::1\]?$|\.railway\.internal$)/.test(host) ? false : { rejectUnauthorized: false };
+  return /(^127\.|^\[?::1\]?$|^[a-z0-9-]+$)/i.test(host) ? false : { rejectUnauthorized: false };
 }
 
 async function openPostgres(url, { ssl } = {}) {
   const { default: pg } = await import('pg');
   pg.types.setTypeParser(20, Number); // bigint (count(*), sequence) as a JS number
   const pool = new pg.Pool({ connectionString: url, ssl: sslFor(url, ssl), max: 10 });
-  // An idle connection dropped by the database (for example while Railway restarts it) must not crash the server.
+  // An idle connection dropped by the database (for example while Render restarts it) must not crash the server.
   pool.on('error', error => console.error('Database connection error:', error.code || error.name));
   const on = client => ({
     async query(sql, params) { const result = await client.query(sql, params); return { rows: result.rows, count: result.rowCount ?? 0 }; },
@@ -334,7 +335,7 @@ const SCHEMA = `
 // Command-line scripts: the database named by DATABASE_URL, else the local PGlite folder (same default as the server).
 export const openDatabaseFromEnv = (env, localFolder) => openDatabase(env.DATABASE_URL?.trim() || localFolder, { ssl: env.DATABASE_SSL });
 
-// target: a postgres:// URL (Railway), a folder for a local PGlite database, or ':memory:' (tests).
+// target: a postgres:// URL (Render), a folder for a local PGlite database, or ':memory:' (tests).
 export async function openDatabase(target, options = {}) {
   const backend = /^postgres(ql)?:\/\//i.test(target) ? await openPostgres(target, options) : await openPglite(target);
   const db = wrap(backend);

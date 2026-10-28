@@ -13,7 +13,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-  # The same tests on a real PostgreSQL server (the engine Railway runs), one test file at a time on one database.
+  # The same tests on a real PostgreSQL server (the engine Render runs), one test file at a time on one database.
   test-postgres:
     runs-on: ubuntu-latest
     services:

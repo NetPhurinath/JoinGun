@@ -1,6 +1,6 @@
 # JoinGun Posting MVP
 
-Scope authorized on 2026-10-07: create **text posts** and **activity posts**, and read them in a newest-first feed. Node.js + Express + PostgreSQL (Railway; SQLite until 2026-10-29). The UI lives in `web/` and is served by Express at `/`. `.docs/02-design/prototype/` is kept only as the design reference and is no longer served.
+Scope authorized on 2026-10-07: create **text posts** and **activity posts**, and read them in a newest-first feed. Node.js + Express + PostgreSQL (Render; SQLite until 2026-10-29, Railway planned on 2026-10-29 but never deployed). The UI lives in `web/` and is served by Express at `/`. `.docs/02-design/prototype/` is kept only as the design reference and is no longer served.
 
 ## Run
 
@@ -13,16 +13,16 @@ npm start
 
 Open `http://127.0.0.1:3000`. With no `DATABASE_URL` the server uses a local PGlite database (PostgreSQL in WebAssembly) in `data/pglite/` and creates its tables automatically; with `DATABASE_URL` set it uses that PostgreSQL database. Posts survive server restarts. Use `npm run dev` for automatic restarts and `npm test` for integration tests (PGlite, in memory). Run commands from the repository root.
 
-Environment variables: see [`.env.example`](../.env.example) and "Accounts and sign-in" below. `PORT` (default 3000), `HOST` (default 127.0.0.1) and `DATABASE_URL` (`postgres://…`; required when `NODE_ENV=production`). TLS to the database is on unless the host is local or `*.railway.internal`; `DATABASE_SSL=false` or `true` overrides. Database files and dependencies are excluded from Git.
+Environment variables: see [`.env.example`](../.env.example) and "Accounts and sign-in" below. `PORT` (default 3000), `HOST` (default 127.0.0.1) and `DATABASE_URL` (`postgres://…`; required when `NODE_ENV=production`). TLS to the database is on unless the host is local or has no dot (Render's internal database address); `DATABASE_SSL=false` or `true` overrides. Database files and dependencies are excluded from Git.
 
-### Deploy on Railway
+### Deploy on Render
 
-1. Create a project from this repository and add a **PostgreSQL** service.
-2. On the app service set: `NODE_ENV=production`, `HOST=0.0.0.0`, `TRUST_PROXY=true`, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `APP_SECRET` (32+ random characters; never change it afterwards), `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and optionally `MODERATOR_EMAILS`. Railway sets `PORT`.
-3. `railway.json` starts `npm start` and checks `/api/health` (which queries the database). Tables are created on first start.
-4. Run one app instance: rate limits and the minute and daily jobs live in the process.
-5. Point the Android app's `server.url` in `capacitor.config.json` at the Railway domain, then `npm run cap:sync`.
-6. Database backups are Railway's; the app makes none. Check what the plan keeps.
+1. On Render choose **New → Blueprint** and pick this repository. `render.yaml` creates the web service `joingun` and the PostgreSQL 17 database `joingun-db`, both in Singapore, and links `DATABASE_URL` to the database's internal URL. The database accepts no connections from the internet (`ipAllowList: []`).
+2. Render generates `APP_SECRET` once (never change it afterwards) and sets `NODE_ENV=production`, `HOST=0.0.0.0`, `TRUST_PROXY=true` and `PORT`. Fill `GMAIL_USER`, `GMAIL_APP_PASSWORD` and optionally `MODERATOR_EMAILS` when the Blueprint asks.
+3. The service builds with `npm ci` (no dev dependencies, since `NODE_ENV=production`), starts with `npm start` and checks `/api/health` (which queries the database). Tables are created on first start.
+4. Run one instance: rate limits and the minute and daily jobs live in the process.
+5. Point the Android app's `server.url` in `capacitor.config.json` at the `…onrender.com` address, then `npm run cap:sync`.
+6. Free plans (chosen for the first test): the web service sleeps after about 15 idle minutes, so reminders and the daily purge run only while it is awake, and the first request after sleep is slow; the free database expires about 30 days after creation and has no backups. Check Render's current pricing page before relying on these numbers, and move to paid plans before the pilot.
 
 ## API
 
@@ -79,7 +79,7 @@ Meeting locations require a separate explicit opt-in on each activity post under
 
 ## Verification
 
-`npm test` uses real HTTP requests to Express and in-memory PGlite databases (real PostgreSQL SQL, not the Railway server itself). Tests cover both post types, persistence after reopening, consent validation, malformed requests, field limits, SQL-like input, pagination under new inserts, private-file access and transactional rollback. Tests also cover `web/` routes and hidden private paths, optional map/category fields, SQL-side category/date/search filters with totals and the 2–50 capacity limit. Since the move to PostgreSQL (2026-10-29) the suite has been ported but its result on that engine is recorded in the project log, not here; a smoke test on a Railway deploy is still needed. Real mobile devices have not been verified.
+`npm test` uses real HTTP requests to Express and in-memory PGlite databases (real PostgreSQL SQL, not the Render server itself). Tests cover both post types, persistence after reopening, consent validation, malformed requests, field limits, SQL-like input, pagination under new inserts, private-file access and transactional rollback. Tests also cover `web/` routes and hidden private paths, optional map/category fields, SQL-side category/date/search filters with totals and the 2–50 capacity limit. Since the move to PostgreSQL (2026-10-29) the suite has been ported but its result on that engine is recorded in the project log, not here; a smoke test on a Render deploy is still needed. Real mobile devices have not been verified.
 
 `npm run test:e2e` (Playwright, added 2026-10-28) drives the real UI in Chromium on a phone-size screen against `tests/e2e/server.js`, a separate server with an in-memory database and seed activities that never opens `data/`. First run: `npx playwright install chromium`. It covers the core journey (filter, open, join with consent), a full activity, the unticked location consent, reload persistence and delete-with-confirm (cancel), sign-up through the UI, and that the welcome page fits a phone screen. On 2026-10-28 all 6 pass, after fixing the welcome page that was wider than a phone screen (test plan TC-ACC-09).
 
@@ -226,7 +226,7 @@ All need the `moderator` role: emails listed in `MODERATOR_EMAILS` get it on sig
 
 - Security headers on every response: CSP (now also allows Nominatim for place search), `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`, `Permissions-Policy` (no geolocation, camera or microphone), `Referrer-Policy`, `nosniff`, and HSTS when `NODE_ENV=production`. Written by hand, without helmet, so no new dependency.
 - Rate limits (in memory, one process): 300 writes per IP per 15 minutes overall; posts 30 an hour, join and leave 60 an hour, friend requests 50 a day, recommendation feedback 60 an hour, appeals 5 a day, plus the earlier sign-in, report and export limits.
-- Backups: the app makes none since 2026-10-29 (the `VACUUM INTO` job was SQLite-only); the Railway PostgreSQL service keeps them. Backups contain personal data.
+- Backups: the app makes none since 2026-10-29 (the `VACUUM INTO` job was SQLite-only); the Render PostgreSQL service keeps them (none on the free plan). Backups contain personal data.
 - Configuration checks at start: `HOST`, `DATABASE_URL`, `MODERATOR_EMAILS`; see `.env.example`. Bind `HOST=0.0.0.0` behind the host's HTTPS proxy with `TRUST_PROXY=true` and `NODE_ENV=production`.
 - GitHub Actions (`.github/workflows/test.yml`) runs `npm ci` and `npm test` on Node 22 for every push and pull request.
 - Logs (`audit_logs`, `auth_logs`, `action_logs`, consent and report tables) are still never pruned; a retention schedule is an open Product Owner decision.

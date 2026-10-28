@@ -82,7 +82,7 @@ The user (Tech Lead) asked for the traceability, agent/skill, audit, known-gaps 
 | 40 | The backlog audit recommends **117 points** but the backlog text is unchanged. | The rows in both copies and the PDF's own task counts give 117; CLAUDE.md forbids changing the totals without asking. | `.docs/05-log/2026-10-28-backlog-audit.md` |
 | 41 | The team will not run gap plan phase 1 (interviews, Path B screenshots) or phase 3 (diagram review, PNG redraw, diagram checker). Traceability uses the questionnaire, Path B research and the draft `diagrams.md` as they are. | Given by the user on 2026-10-28. The W5 evidence and diagram gaps stay open. | `KNOWN-GAPS.md` |
 
-## Hosting on Railway (2026-10-29)
+## Hosting on Railway (2026-10-29, replaced the same day by Render, decision 49)
 
 The Tech Lead chose Railway for hosting and Railway's PostgreSQL for the database. The existing data is test data only and is not migrated.
 
@@ -101,10 +101,16 @@ The Tech Lead chose Railway for hosting and Railway's PostgreSQL for the databas
 | 47 | **Encryption at rest.** Rely on the application-level encryption that already exists (email, year, interests, bio with AES-256-GCM) plus whatever Railway applies to its database volumes. Do not claim whole-database encryption. | Display names and usernames must stay searchable; the project cannot verify Railway's disk encryption from the code, so it is recorded as the provider's, to be confirmed from Railway's documentation before real personal data is collected. | Railway project; `server/profile-crypto.js` |
 | 48 | CI runs the tests twice: on PGlite (`test`) and on a real PostgreSQL 17 service (`test-postgres`, `TEST_DATABASE_URL`, one file at a time). | PGlite is not the server Railway runs; the second job is the check that the SQL works on the real engine. | `.github/workflows/test.yml`, `server/test/helpers.js` |
 
+## Hosting on Render (2026-10-29)
+
+| # | Decision | Why | Where to change |
+| --- | --- | --- | --- |
+| 49 | Host on Render (web service + Render PostgreSQL 17, Singapore) from the `render.yaml` Blueprint; `railway.json` removed. Free plans for the first test. Replaces Railway in decisions 42, 44 and 47 (backups and disk encryption are now Render's to confirm). TLS is off for database hosts with no dot (Render's internal address) and on otherwise. | Given by the Tech Lead on 2026-10-29: Railway sign-up showed "Sign ups are currently disabled", so no Railway deploy was made. The code needed no change beyond the TLS rule. Free web services sleep when idle (jobs pause) and the free database expires after about 30 days with no backups, so paid plans are needed before the pilot. | `render.yaml`, `server/database.js` |
+
 ## Still open (not decided here)
 
-- Domain, monthly budget (Tech Lead), and whether Railway's disk and database encryption is enough (the disk-encryption question in decision 24).
-- What Railway's plan keeps as database backups, and for how long.
+- Domain, monthly budget and when to leave Render's free plans (Tech Lead), and whether Render's disk and database encryption is enough (the disk-encryption question in decision 24).
+- What Render's paid database plan keeps as backups, and for how long (the free plan keeps none).
 - Whether to add Firebase Cloud Messaging for server-sent push in the app (needs a Firebase project).
 - Building and testing the Android app on a real phone (needs Android Studio).
 - Confirm the proposed retention periods (decision 46) and add the deletion job (Product Owner).
