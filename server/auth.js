@@ -25,6 +25,8 @@ export function createRateLimiter() {
       hits.set(key, recent);
       return true;
     },
+    // Gives back the latest hit, for an attempt that did not get what it was counted for (a send that failed).
+    undo(key) { hits.get(key)?.pop(); },
   };
 }
 
@@ -110,17 +112,25 @@ export function createAuth(store, { config, mailer, limiter = createRateLimiter(
     const email = normalizeEmail(raw);
     if (!isAllowedEmail(email, config.emailSuffix)) throw new AuthHttpError(400, `ใช้อีเมลสถานศึกษาที่ลงท้ายด้วย .${config.emailSuffix}`, 'email');
     const emailHash = security.emailHash(email);
-    if (!limiter.allow(`code-ip:${req.ip}`, 20, 3_600_000) || !limiter.allow(`code-email-hour:${emailHash}`, 5, 3_600_000)) {
-      await accounts.log({ emailHash, action: 'code.request', status: 'rate-limited', ip: req.ip });
-      throw new AuthHttpError(429, 'ขอรหัสบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่');
-    }
-    if (!limiter.allow(`code-email:${emailHash}`, 1, config.resendSeconds * 1000)) {
+    // The resend wait is checked first, so taps inside it do not use up the hourly allowance.
+    const resendKey = `code-email:${emailHash}`, hourKey = `code-email-hour:${emailHash}`;
+    if (!limiter.allow(resendKey, 1, config.resendSeconds * 1000)) {
       throw new AuthHttpError(429, `ขอรหัสใหม่ได้หลังจาก ${config.resendSeconds} วินาที`);
+    }
+    const hourOk = limiter.allow(hourKey, 5, 3_600_000);
+    if (!hourOk || !limiter.allow(`code-ip:${req.ip}`, 20, 3_600_000)) {
+      if (hourOk) limiter.undo(hourKey);
+      await accounts.log({ emailHash, action: 'code.request', status: 'rate-limited', ip: req.ip });
+      throw new AuthHttpError(429, 'ขอรหัสครบจำนวนต่อชั่วโมงแล้ว กรุณาลองใหม่ในอีกไม่เกิน 1 ชั่วโมง');
     }
     const code = await accounts.issueCode(emailHash);
     try {
       await mailer.send({ to: email, ...codeEmail(code, config.codeMinutes) });
     } catch (error) {
+      // No email arrived: the person may try again at once, and the try does not count towards the hourly limit.
+      // The per-IP count stays, so a failing mail service is not hit without limit.
+      limiter.undo(resendKey);
+      limiter.undo(hourKey);
       await accounts.log({ emailHash, action: 'code.request', status: 'mail-failed', ip: req.ip });
       if (error instanceof MailError) console.error('Mail failed:', error.message);
       throw new AuthHttpError(503, 'ส่งอีเมลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');

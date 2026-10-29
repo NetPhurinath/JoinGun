@@ -30,6 +30,23 @@ test('F1 — sign up with an .ac.th email code through the UI', async ({ page })
   await expect(page.getByText('E2E Badminton open').first()).toBeVisible();
 });
 
+// Going back to the email step and pressing ถัดไป again inside the 60-second resend wait leads on to the code step,
+// where the code already sent still works (it used to stop on the email step with a rate-limit error).
+test('F1 — asking again too soon still reaches the code step', async ({ page }) => {
+  const email = 'again@lamduan.mfu.ac.th';
+  await page.goto('/');
+  await page.getByRole('button', { name: 'สมัครด้วยอีเมลสถานศึกษา' }).first().click();
+  const sheet = page.locator('#auth-dialog');
+  await sheet.getByLabel('อีเมลสถานศึกษา').fill(email);
+  await sheet.getByRole('button', { name: 'ถัดไป' }).click();
+  await sheet.getByRole('button', { name: 'ย้อนกลับไปแก้อีเมล' }).click();
+  await sheet.getByRole('button', { name: 'ถัดไป' }).click();
+  await expect(sheet.getByRole('alert')).toContainText('ใช้รหัสล่าสุดที่ได้รับ');
+  await sheet.getByLabel('รหัสยืนยัน').fill(await codeFor(page.request, email));
+  await sheet.getByRole('button', { name: 'ยืนยัน', exact: true }).click();
+  await expect(sheet.locator('#auth-terms')).toBeVisible();
+});
+
 // TC-JOIN-07: user journey steps 1–5.
 test('2.4 LR1 — core journey: filter, open an activity, join with consent', async ({ page }) => {
   await signUpByApi(page, 'joiner@lamduan.mfu.ac.th', 'joiner_e2e');

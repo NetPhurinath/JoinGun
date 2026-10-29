@@ -318,7 +318,20 @@ async function onSubmit(event) {
     const email = form.elements.email.value;
     if (!auth.isAllowedEmail(email)) { showError(`ใช้อีเมลสถานศึกษาที่ลงท้ายด้วย .${auth.EMAIL_SUFFIX}`, 'auth-email'); return; }
     await withBusy(form, 'กำลังส่งรหัส…', async () => {
-      const { resendAfter, expiresInMinutes } = await auth.requestCode(email);
+      let sent;
+      try { sent = await auth.requestCode(email); }
+      catch (error) {
+        if (error.status !== 429) throw error;
+        // Too soon for another code: the latest one sent to this address still works until it expires,
+        // so go on to the code step instead of leaving the person stuck on this one.
+        flow.email = auth.normalizeEmail(email);
+        stopResendTimer();
+        flow.resendLeft = 0;
+        goTo('code');
+        showError(`${error.message} ใช้รหัสล่าสุดที่ได้รับทางอีเมลได้ ถ้ายังไม่หมดอายุ`);
+        return;
+      }
+      const { resendAfter, expiresInMinutes } = sent;
       flow.email = auth.normalizeEmail(email);
       flow.codeMinutes = expiresInMinutes || flow.codeMinutes;
       goTo('code');

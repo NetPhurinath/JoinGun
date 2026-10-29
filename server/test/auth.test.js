@@ -62,7 +62,11 @@ test('codes are single-use, expire, lock after five wrong attempts, and resends 
   const { store, json, sent } = await fixture(t);
   const email = 'codes@mfu.ac.th';
   await json('/api/auth/request-code', 'POST', { email });
-  assert.equal((await json('/api/auth/request-code', 'POST', { email })).status, 429, 'resend within 60 seconds');
+  for (let i = 0; i < 8; i++) {
+    const again = await json('/api/auth/request-code', 'POST', { email });
+    assert.equal(again.status, 429, 'resend within 60 seconds');
+    assert.match((await again.json()).error, /60 วินาที/, 'taps inside the wait do not use up the hourly allowance');
+  }
   const code = sent.at(-1).code;
   const wrong = code === '000000' ? '111111' : '000000';
   for (let i = 0; i < 5; i++) assert.equal((await json('/api/auth/verify', 'POST', { email, code: wrong })).status, 400);
@@ -84,6 +88,16 @@ test('codes are single-use, expire, lock after five wrong attempts, and resends 
   await json('/api/auth/request-code', 'POST', { email: third });
   await store.db.prepare("UPDATE login_codes SET expires_at = '2000-01-01T00:00:00.000Z'").run();
   assert.equal((await json('/api/auth/verify', 'POST', { email: third, code: sent.at(-1).code })).status, 400);
+});
+
+test('five codes an hour per address, with a message that says how long to wait', async t => {
+  const { json } = await fixture(t, { config: { ...TEST_CONFIG(), resendSeconds: 0 } });
+  const email = 'hourly@mfu.ac.th';
+  for (let i = 0; i < 5; i++) assert.equal((await json('/api/auth/request-code', 'POST', { email })).status, 202);
+  const over = await json('/api/auth/request-code', 'POST', { email });
+  assert.equal(over.status, 429);
+  assert.match((await over.json()).error, /1 ชั่วโมง/);
+  assert.equal((await json('/api/auth/request-code', 'POST', { email: 'other@mfu.ac.th' })).status, 202, 'another address is not blocked');
 });
 
 test('returning users sign straight in; new accounts must accept terms before a profile, and usernames are unique', async t => {
@@ -130,8 +144,11 @@ test('a failed email send returns 503 and is logged without the address', async 
   await once(server, 'listening');
   t.after(async () => { await new Promise(resolve => server.close(resolve)); await store.close(); });
   const original = console.error; console.error = () => {}; t.after(() => { console.error = original; });
-  const response = await fetch(`http://127.0.0.1:${server.address().port}/api/auth/request-code`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'fail@mfu.ac.th' }) });
+  const request = () => fetch(`http://127.0.0.1:${server.address().port}/api/auth/request-code`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'fail@mfu.ac.th' }) });
+  const response = await request();
   assert.equal(response.status, 503);
+  // Failed sends neither start the resend wait nor use up the hourly allowance.
+  for (let i = 0; i < 7; i++) assert.equal((await request()).status, 503);
   const row = await store.db.prepare('SELECT * FROM auth_logs').get();
   assert.equal(row.auth_status, 'mail-failed'); assert.equal(JSON.stringify(row).includes('fail@mfu.ac.th'), false);
 });
