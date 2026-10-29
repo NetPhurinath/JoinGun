@@ -75,7 +75,20 @@ export function setPage(page) {
   renderTabs();
 }
 
+// The test-version banner floats above the tab bar; content and the sticky action bar make room for its height plus its lift.
+function trackDemoBanner() {
+  const banner = $('demo-banner');
+  if (!banner) return;
+  const update = () => {
+    const height = banner.offsetHeight ? banner.offsetHeight + parseFloat(getComputedStyle(banner).getPropertyValue('--demo-banner-lift') || 0) : 0;
+    document.documentElement.style.setProperty('--demo-banner-h', `${height}px`);
+  };
+  update();
+  if (window.ResizeObserver) new ResizeObserver(update).observe(banner);
+}
+
 export function setupShell() {
+  trackDemoBanner();
   auth.onAuthChange(() => { state.lastSeenUnread = null; renderTabs(); refreshBadges(); });
   renderTabs();
   refreshBadges();

@@ -55,7 +55,6 @@ export function avatar(user, size = '') {
   return `<span class="${cls}" ${style} aria-hidden="true">${initial(name)}</span>`;
 }
 
-export const verifiedBadge = () => `<span class="verified" title="ยืนยันอีเมลสถานศึกษาแล้ว (ไม่ใช่การรับประกันตัวตน)">${icon('check', { size: 'sm' })}<span class="visually-hidden">ยืนยันอีเมลสถานศึกษาแล้ว</span></span>`;
 
 export async function copyLink(path) {
   const url = `${location.origin}${location.pathname}${path}`;

@@ -1,6 +1,6 @@
 // Post rows (X style) with an activity event card (Facebook event style). The card keeps the design-system order:
 // title → category → date/time → place → places → "ดูรายละเอียด". Joining happens only on the detail page.
-import { avatar, escapeHTML, verifiedBadge } from './dom.js';
+import { avatar, escapeHTML } from './dom.js';
 import { bannerArt, icon } from './icons.js';
 import { CATEGORY_LABELS, dayNumber, formatDateTime, monthShort, relativeTime, seatsText, untilText } from './format.js';
 import { menuButton, rememberPosts } from './post-actions.js';
@@ -56,7 +56,7 @@ export function eventCard(post, { link = true, headingLevel = 2 } = {}) {
 function authorLine(post) {
   const author = post.author;
   const name = author.username
-    ? `<a class="author" href="#/u/${encodeURIComponent(author.username)}">${escapeHTML(author.name)}</a>${verifiedBadge()}<span class="handle">@${escapeHTML(author.username)}</span>`
+    ? `<a class="author" href="#/u/${encodeURIComponent(author.username)}">${escapeHTML(author.name)}</a><span class="handle">@${escapeHTML(author.username)}</span>`
     : `<span class="author">${escapeHTML(author.name)}</span>`;
   return `<header class="post-meta">${name}<span aria-hidden="true">·</span><time datetime="${escapeHTML(post.createdAt)}" title="${formatDateTime(post.createdAt)}">${relativeTime(post.createdAt)}</time>${post.updatedAt ? '<span class="small">(แก้ไขแล้ว)</span>' : ''}${menuButton(post)}</header>`;
 }

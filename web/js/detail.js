@@ -4,7 +4,7 @@
 import { getPost, joinActivity, leaveActivity, listParticipants } from './api.js';
 import { getUser, updateUser, sessionLost } from './auth.js';
 import { requireAuth } from './auth-ui.js';
-import { $, avatar, copyLink, escapeHTML, openDialog, pageHead, setupDialog, toast, verifiedBadge } from './dom.js';
+import { $, avatar, copyLink, escapeHTML, openDialog, pageHead, setupDialog, toast } from './dom.js';
 import { markFeedStale } from './feed.js';
 import { CATEGORY_LABELS, dayNumber, formatDateTime, formatWeekday, monthShort, seatsText, untilText } from './format.js';
 import { bannerArt, icon } from './icons.js';
@@ -220,7 +220,7 @@ export function renderDetail(main, post) {
       <div class="host-row">
         ${avatar({ id: post.author.id, name: post.author.name, username: post.author.username })}
         <div class="grow">
-          <div class="row">${post.author.username ? `<a class="name" href="#/u/${encodeURIComponent(post.author.username)}">จัดโดย ${escapeHTML(post.author.name)}</a>${verifiedBadge()}` : `<strong>จัดโดย ${escapeHTML(post.author.name)}</strong>`}</div>
+          <div class="row">${post.author.username ? `<a class="name" href="#/u/${encodeURIComponent(post.author.username)}">จัดโดย ${escapeHTML(post.author.name)}</a>` : `<strong>จัดโดย ${escapeHTML(post.author.name)}</strong>`}</div>
           ${post.author.username
             ? `<p class="small muted">@${escapeHTML(post.author.username)} · <span class="pill pill-primary">ยืนยันอีเมลสถานศึกษาแล้ว</span></p>`
             : '<p class="small muted">บัญชีตัวอย่างจากเวอร์ชันก่อน ไม่ได้ยืนยันอีเมล</p>'}

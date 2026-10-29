@@ -32,7 +32,8 @@ main:focus, h1:focus, h2:focus { outline: none; }
 html { background: var(--color-page); }
 body { background: var(--color-page); -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; }
 .shell { position: relative; width: 100%; max-width: var(--layout-content-max); min-height: 100dvh; margin: 0 auto; background: var(--color-surface); }
-.column { min-height: 100dvh; padding-bottom: calc(var(--size-tabbar) + env(safe-area-inset-bottom) + var(--space-2)); }
+/* --demo-banner-h is the floating test-version banner's height, measured in shell.js (0 when it is hidden). */
+.column { min-height: 100dvh; padding-bottom: calc(var(--size-tabbar) + var(--demo-banner-h, 0px) + env(safe-area-inset-bottom) + var(--space-2)); }
 main { min-height: 60vh; }
 @media (min-width: 560px) {
   .shell { border-inline: var(--border-width) solid var(--color-divider); box-shadow: 0 0 40px rgb(15 23 42 / 10%); }
@@ -100,7 +101,11 @@ main { min-height: 60vh; }
 .tab[aria-selected="true"]::after, .tab[aria-current="page"]::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: min(56px, 70%); height: 4px; border-radius: var(--radius-pill); background: var(--color-primary); }
 .tab .count { margin-left: var(--space-1); padding: 0 6px; border-radius: var(--radius-pill); background: var(--color-primary); color: var(--color-on-primary); font-size: 11px; line-height: 18px; }
 
-.demo-banner { margin-top: var(--space-6); display: flex; gap: var(--space-2); align-items: flex-start; padding: var(--space-2) var(--space-4); background: var(--color-warning-soft); color: var(--color-warning); font-size: var(--text-small); line-height: var(--line-small); border-bottom: var(--border-width) solid var(--color-divider); }
+/* Test-version banner floats above the tab bar on every page, lifted clear of the raised create button */
+.demo-banner { --demo-banner-lift: 24px; position: fixed; bottom: calc(var(--size-tabbar) + env(safe-area-inset-bottom) + var(--demo-banner-lift)); left: 50%; transform: translateX(-50%);
+  width: calc(100% - 2 * var(--space-3)); max-width: calc(var(--layout-content-max) - 2 * var(--space-3)); z-index: var(--layer-sticky);
+  padding: var(--space-1) var(--space-3); border: var(--border-width) solid var(--color-divider); border-radius: 12px; background: var(--color-warning-soft); color: var(--color-warning);
+  font-size: 12px; line-height: 16px; text-align: center; box-shadow: var(--shadow-raised); }
 .section-pad { padding: var(--space-4); }
 .divider-block { height: 8px; background: var(--color-background); border-block: var(--border-width) solid var(--color-divider); }
 
@@ -207,8 +212,6 @@ input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .avatar { background: hsl(var(--hue) 45% 22%); color: hsl(var(--hue) 80% 82%); } }
 .avatar-stack { display: flex; }
 .avatar-stack .avatar + .avatar { margin-left: -8px; }
-.verified { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--color-primary); color: #fff; flex: none; }
-.verified svg { width: 12px; height: 12px; }
 
 /* ---- Composer (Facebook-style "what do you want to do?") ------------------------------------------ */
 .composer { display: flex; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: var(--border-width) solid var(--color-divider); }
@@ -324,7 +327,7 @@ a.event-card:hover { border-color: var(--color-border); box-shadow: var(--shadow
 .participant-list li { display: flex; align-items: center; gap: var(--space-3); min-height: 56px; }
 .participant-list li .grow { flex: 1; min-width: 0; }
 .participant-list a { color: var(--color-text); font-weight: var(--font-weight-bold); text-decoration: none; }
-.action-bar { position: sticky; bottom: calc(var(--size-tabbar) + env(safe-area-inset-bottom)); z-index: var(--layer-sticky); display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); background: var(--color-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: var(--border-width) solid var(--color-divider); }
+.action-bar { position: sticky; bottom: calc(var(--size-tabbar) + var(--demo-banner-h, 0px) + env(safe-area-inset-bottom)); z-index: var(--layer-sticky); display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); background: var(--color-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: var(--border-width) solid var(--color-divider); }
 .action-bar .pill { align-self: flex-start; }
 .cancelled-banner { padding: var(--space-3) var(--space-4); background: var(--color-danger-soft); color: var(--color-danger); font-weight: var(--font-weight-semibold); }
 
@@ -394,7 +397,7 @@ a.event-card:hover { border-color: var(--color-border); box-shadow: var(--shadow
 .success-panel h2 { color: var(--color-success); }
 .success-panel p { color: var(--color-text); }
 
-.toast { position: fixed; left: 50%; bottom: calc(var(--size-tabbar) + var(--space-4) + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 50; width: max-content; max-width: calc(100% - 2 * var(--space-4)); padding: var(--space-3) var(--space-5); border-radius: var(--radius-pill); background: var(--color-primary); color: var(--color-on-primary); box-shadow: var(--shadow-raised); font-weight: var(--font-weight-semibold); }
+.toast { position: fixed; left: 50%; bottom: calc(var(--size-tabbar) + var(--demo-banner-h, 0px) + var(--space-4) + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 50; width: max-content; max-width: calc(100% - 2 * var(--space-4)); padding: var(--space-3) var(--space-5); border-radius: var(--radius-pill); background: var(--color-primary); color: var(--color-on-primary); box-shadow: var(--shadow-raised); font-weight: var(--font-weight-semibold); }
 .noscript { padding: var(--space-4); }
 
 /* ---- Welcome page (phone layout on every screen) ------------------------------------------------------ */

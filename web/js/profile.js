@@ -3,7 +3,7 @@
 import { acceptFriend, blockUser, cancelFriend, declineFriend, getHistory, getProfile, listPosts, removeFriend, sendFriendRequest, unblockUser } from './api.js';
 import { getUser } from './auth.js';
 import { requireAuth } from './auth-ui.js';
-import { $, avatar, emptyState, escapeHTML, hue, pageHead, skeletonPosts, toast, verifiedBadge } from './dom.js';
+import { $, avatar, emptyState, escapeHTML, hue, pageHead, skeletonPosts, toast } from './dom.js';
 import { CATEGORY_LABELS, YEAR_LABELS, dayNumber, formatDateTime, monthShort } from './format.js';
 import { icon } from './icons.js';
 import { confirmSheet } from './post-actions.js';
@@ -33,7 +33,7 @@ function header(p) {
     </div>
     <div class="profile-info">
       <div>
-        <h2 class="profile-name">${escapeHTML(p.displayName)} ${verifiedBadge()}</h2>
+        <h2 class="profile-name">${escapeHTML(p.displayName)}</h2>
         <p class="muted">@${escapeHTML(p.username)}</p>
       </div>
       ${p.bio ? `<p class="post-text">${escapeHTML(p.bio)}</p>` : ''}
