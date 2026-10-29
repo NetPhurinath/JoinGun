@@ -13,6 +13,7 @@
     "test:e2e": "playwright test",
     "seed": "node server/scripts/seed.js",
     "moderator": "node server/scripts/moderator.js",
+    "gmail-token": "node server/scripts/gmail-token.js",
     "perf": "node server/scripts/perf.js",
     "bias-report": "node server/scripts/bias-report.js",
     "cap:sync": "cap sync android",

@@ -18,7 +18,7 @@ Environment variables: see [`.env.example`](../.env.example) and "Accounts and s
 ### Deploy on Render
 
 1. On Render choose **New → Blueprint** and pick this repository. `render.yaml` creates the web service `joingun` and the PostgreSQL 17 database `joingun-db`, both in Singapore, and links `DATABASE_URL` to the database's internal URL. The database accepts no connections from the internet (`ipAllowList: []`).
-2. Render generates `APP_SECRET` once (never change it afterwards) and sets `NODE_ENV=production`, `HOST=0.0.0.0`, `TRUST_PROXY=true` and `PORT`. Fill `GMAIL_USER`, `GMAIL_APP_PASSWORD` and optionally `MODERATOR_EMAILS` when the Blueprint asks.
+2. Render generates `APP_SECRET` once (never change it afterwards) and sets `NODE_ENV=production`, `HOST=0.0.0.0`, `TRUST_PROXY=true` and `PORT`. Fill `GMAIL_USER`, `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` (see "Gmail API" below) and optionally `MODERATOR_EMAILS` on the service's **Environment** page. Free web services block outgoing SMTP (a send with an App Password ends in `Gmail send failed: ETIMEDOUT`), so use the Gmail API there.
 3. The service builds with `npm ci` (no dev dependencies, since `NODE_ENV=production`), starts with `npm start` and checks `/api/health` (which queries the database). Tables are created on first start.
 4. Run one instance: rate limits and the minute and daily jobs live in the process.
 5. Point the Android app's `server.url` in `capacitor.config.json` at the `…onrender.com` address, then `npm run cap:sync`.
@@ -115,6 +115,18 @@ Auth error messages are Thai because the UI shows them directly. Codes expire af
 Tables: `users` (profile and status), `user_emails` (HMAC-SHA256 lookup hash and an AES-256-GCM encrypted copy for account recovery; the email is never stored in plain text or next to posts), `login_codes` (hashed codes), `sessions` (SHA-256 of the token), `terms_acceptances` (user, both versions, UTC time, IP; insert-only) and `auth_logs` (code requests, sign-up, login success and failure, terms, profile and logout with `user_id` when known, UTC time, source IP and outcome; not pruned). Keys are derived from `APP_SECRET` with HKDF, one per purpose. Posts created before accounts existed still show as Demo Student.
 
 Not done yet: encryption of the whole database file, Google sign-in (the UI button stays hidden), and rate limits shared across several server processes (the current counters are in memory). Gmail sending is tested with a substitute transport that checks the settings and message; a real send must be checked with a real App Password. Personal Gmail allows about 500 recipients per 24 hours, may block sign-ins from servers in unexpected countries (approve them under the account's Recent activity), and is not meant for high-volume automated mail; move to a provider with your own domain if usage grows.
+
+#### Gmail API
+
+Where the host blocks SMTP ports (Render's free web services), the server sends through the Gmail API over HTTPS instead: set `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN` with `GMAIL_USER`. When all three are set they are used instead of `GMAIL_APP_PASSWORD`. The start-up line shows `email: Gmail API …` or `Gmail SMTP …`. No new package: nodemailer builds the message and Node's `fetch` sends it.
+
+1. In [Google Cloud console](https://console.cloud.google.com/) sign in as the sending Gmail account, create a project and enable the **Gmail API** (APIs & Services → Library).
+2. **OAuth consent screen**: user type External, app name JoinGun, add the sending Gmail as a test user. Then press **Publish app** (status "In production"): while the app is in "Testing", Google expires the refresh token after 7 days. Google may show an "unverified app" warning when you allow it; that is expected for the project's own account.
+3. **Credentials → Create credentials → OAuth client ID**, type **Desktop app**. Copy the client ID and secret into `.env` as `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET`.
+4. On your own computer run `npm run gmail-token`, open the printed link, sign in as the sending account and allow "Send email on your behalf". The terminal prints `GMAIL_REFRESH_TOKEN=…`.
+5. Add the three values and `GMAIL_USER` on the host. Never commit them. The only scope asked for is `gmail.send`; the token cannot read the mailbox.
+
+Errors in the log: `Gmail send failed: TOKEN invalid_grant` means the refresh token was revoked or expired (run step 4 again); `API 403` usually means the Gmail API is not enabled in the project.
 
 ## Joining activities
 

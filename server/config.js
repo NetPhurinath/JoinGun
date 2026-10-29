@@ -28,7 +28,16 @@ export function loadConfig(env = process.env, { devSecretFile } = {}) {
   const gmailUser = (env.GMAIL_USER || '').trim();
   // Google shows App Passwords in groups of four ("abcd efgh ijkl mnop"); spaces are not part of the password.
   const gmailAppPassword = (env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
-  if (production && (!gmailUser || !gmailAppPassword)) throw new Error('GMAIL_USER and GMAIL_APP_PASSWORD are required in production.');
+  // Gmail API over HTTPS (OAuth refresh token) for hosts that block SMTP, such as Render's free web services.
+  const gmailApi = {
+    clientId: (env.GMAIL_CLIENT_ID || '').trim(),
+    clientSecret: (env.GMAIL_CLIENT_SECRET || '').trim(),
+    refreshToken: (env.GMAIL_REFRESH_TOKEN || '').trim(),
+  };
+  const useGmailApi = Boolean(gmailApi.clientId && gmailApi.clientSecret && gmailApi.refreshToken);
+  if (production && (!gmailUser || !(gmailAppPassword || useGmailApi))) {
+    throw new Error('GMAIL_USER and GMAIL_APP_PASSWORD (or GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REFRESH_TOKEN) are required in production.');
+  }
 
   // Accepted sign-up emails: any domain ending in this suffix (default: Thai educational institutions, *.ac.th).
   const emailSuffix = (env.ALLOWED_EMAIL_SUFFIX || 'ac.th').replace(/^[.@]+/, '').toLowerCase();
@@ -52,6 +61,7 @@ export function loadConfig(env = process.env, { devSecretFile } = {}) {
     emailSuffix,
     gmailUser,
     gmailAppPassword,
+    gmailApi: useGmailApi ? gmailApi : null,
     mailFromName: env.MAIL_FROM_NAME || 'JoinGun',
     cookieSecure: production || bool(env.COOKIE_SECURE),
     trustProxy: bool(env.TRUST_PROXY),

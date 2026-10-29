@@ -155,4 +155,39 @@ test('Gmail settings: spaces are removed from the app password and production re
   assert.equal(config.gmailUser, 'joingun.app@gmail.com');
   assert.equal(config.gmailAppPassword, 'abcdefghijklmnop');
   assert.throws(() => loadConfig({ NODE_ENV: 'production', APP_SECRET: 's'.repeat(40), GMAIL_USER: 'x@gmail.com' }), /GMAIL_USER and GMAIL_APP_PASSWORD/);
+  // The three Gmail API values replace the App Password; two of them are not enough.
+  const api = { GMAIL_CLIENT_ID: ' id ', GMAIL_CLIENT_SECRET: 'secret', GMAIL_REFRESH_TOKEN: 'refresh' };
+  const production = { NODE_ENV: 'production', APP_SECRET: 's'.repeat(40), GMAIL_USER: 'x@gmail.com', DATABASE_URL: 'postgres://u@db/x' };
+  assert.deepEqual(loadConfig({ ...production, ...api }).gmailApi, { clientId: 'id', clientSecret: 'secret', refreshToken: 'refresh' });
+  assert.throws(() => loadConfig({ ...production, ...api, GMAIL_REFRESH_TOKEN: '' }), /GMAIL_USER and GMAIL_APP_PASSWORD/);
+  assert.equal(config.gmailApi, null);
+});
+
+test('the Gmail API mailer refreshes the token once, sends the raw message and reports failures without details', async () => {
+  const { createGmailApiMailer, MailError } = await import('../mailer.js');
+  const calls = [];
+  const fakeFetch = async (url, options) => {
+    calls.push({ url, options });
+    if (url.includes('oauth2')) return new Response(JSON.stringify({ access_token: 'at', expires_in: 3600 }), { status: 200 });
+    return new Response('{}', { status: 200 });
+  };
+  const built = [];
+  const buildRaw = async message => { built.push(message); return Buffer.from('raw message'); };
+  const mailer = createGmailApiMailer({ user: 'joingun.app@gmail.com', clientId: 'id', clientSecret: 'secret', refreshToken: 'refresh', fromName: 'JoinGun' }, { buildRaw, fetch: fakeFetch });
+  await mailer.send({ to: 'a@mfu.ac.th', subject: 'S', html: '<p>H</p>', text: 'T' });
+  await mailer.send({ to: 'b@mfu.ac.th', subject: 'S', html: '<p>H</p>', text: 'T' });
+  assert.deepEqual(built[0], { from: { name: 'JoinGun', address: 'joingun.app@gmail.com' }, to: 'a@mfu.ac.th', subject: 'S', html: '<p>H</p>', text: 'T' });
+  assert.equal(calls.filter(call => call.url.includes('oauth2')).length, 1, 'the access token is reused');
+  assert.equal(String(calls[0].options.body), 'client_id=id&client_secret=secret&refresh_token=refresh&grant_type=refresh_token');
+  const send = calls[1];
+  assert.equal(send.url, 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send');
+  assert.equal(send.options.headers.authorization, 'Bearer at');
+  assert.deepEqual(JSON.parse(send.options.body), { raw: Buffer.from('raw message').toString('base64url') });
+
+  const revoked = createGmailApiMailer({ user: 'u@gmail.com', clientId: 'i', clientSecret: 's', refreshToken: 'r', fromName: 'J' },
+    { buildRaw, fetch: async () => new Response(JSON.stringify({ error: 'invalid_grant', error_description: 'for a@mfu.ac.th' }), { status: 400 }) });
+  await assert.rejects(revoked.send({ to: 'a@mfu.ac.th', subject: 'S', html: 'H', text: 'T' }), error => error instanceof MailError && error.message === 'Gmail send failed: TOKEN invalid_grant');
+  const refused = createGmailApiMailer({ user: 'u@gmail.com', clientId: 'i', clientSecret: 's', refreshToken: 'r', fromName: 'J' },
+    { buildRaw, fetch: async url => url.includes('oauth2') ? new Response(JSON.stringify({ access_token: 'at' })) : new Response('{"error":{"message":"a@mfu.ac.th"}}', { status: 403 }) });
+  await assert.rejects(refused.send({ to: 'a@mfu.ac.th', subject: 'S', html: 'H', text: 'T' }), error => error instanceof MailError && error.message === 'Gmail send failed: API 403');
 });

@@ -107,6 +107,8 @@ The Tech Lead chose Railway for hosting and Railway's PostgreSQL for the databas
 | --- | --- | --- | --- |
 | 49 | Host on Render (web service + Render PostgreSQL 17, Singapore) from the `render.yaml` Blueprint; `railway.json` removed. Free plans for the first test. Replaces Railway in decisions 42, 44 and 47 (backups and disk encryption are now Render's to confirm). TLS is off for database hosts with no dot (Render's internal address) and on otherwise. | Given by the Tech Lead on 2026-10-29: Railway sign-up showed "Sign ups are currently disabled", so no Railway deploy was made. The code needed no change beyond the TLS rule. Free web services sleep when idle (jobs pause) and the free database expires after about 30 days with no backups, so paid plans are needed before the pilot. | `render.yaml`, `server/database.js` |
 
+| 50 | Send email through the Gmail API over HTTPS (OAuth refresh token, scope `gmail.send`) when `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN` are set; SMTP with the App Password stays for local use. `npm run gmail-token` gets the token. | Given by the Tech Lead on 2026-10-30: the first Render deploy logged `Gmail send failed: ETIMEDOUT` because free web services block SMTP ports, and the Tech Lead chose the free Gmail API over a paid Render plan. No domain is needed and no package is added. | `server/mailer.js`, `server/index.js`, `server/config.js`, `server/scripts/gmail-token.js` |
+
 ## Still open (not decided here)
 
 - Domain, monthly budget and when to leave Render's free plans (Tech Lead), and whether Render's disk and database encryption is enough (the disk-encryption question in decision 24).

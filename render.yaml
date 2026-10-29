@@ -27,10 +27,15 @@ services:
       # Generated once by Render. Never change it afterwards: existing accounts would become unreachable.
       - key: APP_SECRET
         generateValue: true
-      # Filled in on the Render dashboard; never commit them.
+      # Filled in on the Render dashboard; never commit them. Free web services block SMTP ports, so mail goes through
+      # the Gmail API over HTTPS: get the refresh token with `npm run gmail-token` (see server/README.md).
       - key: GMAIL_USER
         sync: false
-      - key: GMAIL_APP_PASSWORD
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
         sync: false
       - key: MODERATOR_EMAILS
         sync: false
