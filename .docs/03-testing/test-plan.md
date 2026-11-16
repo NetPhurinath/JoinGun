@@ -201,20 +201,20 @@ Recruitment: posts in club and faculty groups, with a short screener that only c
 - Record **screen video only, with no audio**: no faces and no photos of participants. This screen recording is the "photos or video of testing" evidence the *Post-Midterm Plan* deck asks for. Instead of an audio recording, the note-taker types key quotes into the observation sheet (in quotation marks; their own summaries in brackets), with no names. Questionnaires collect no name or email.
 - No raw recordings or identifiable notes go into the Git repository; only aggregated results go into `test-report.md`.
 - **Deletion date.** The deck asks teams to keep consent forms, the raw Excel sheet and photos or video for the instructor to check. Names, contact details, screener answers, screen recordings and signed consent forms are therefore kept until the instructor has checked them, then deleted by **31 Dec 2026** (31 ธ.ค. 2569), the same date written in the consent form (part A) and screener (part G) of [uat-materials-th.md](uat-materials-th.md). The raw Excel sheet holds no names or contact details and is not deleted.
-- Participants **do not enter their own email or personal data**. They use test accounts prepared and signed in by the team on a team phone; there is no sign-up task (decision 2026-11-16, DECISIONS.md #42). The UAT database is separate from any pilot database and is wiped after analysis.
+- Participants **do not enter their own email or personal data**. Each participant gets **their own test account** (U01–U20), made by the team in advance with plus-addressing on a team `.ac.th` mailbox (for example `<team address>+u07@lamduan.mfu.ac.th`) and signed in on the team phone before the session; there is no sign-up task (decision 2026-11-16, DECISIONS.md #51). A fresh account per person means every participant sees the one-time participation consent and default settings, with no reset between sessions. After each session the team leaves the futsal activity (to free its place), deletes calendar entries and chat messages on the team phone, and signs out. The UAT database is separate from any pilot database and is wiped after analysis.
 
 ### 5.4 Environment and test data
 
 | Item | Plan |
 | --- | --- |
 | Server | Local server on a team laptop on the same Wi-Fi, opened from a team Android phone (hosting is not decided, step 7). If a deployed HTTPS host is ready before 4 Nov, it may be used instead. Which one was used is written in the report, because NFR1/NFR3 results differ. |
-| Data | A UAT database with 12 activities over the next 7 days written by the team (categories, times, places, places left), created through the UI or `npm run seed` plus team posts. Never on the pilot database. |
+| Data | A UAT database with 12 activities over the next 7 days written by the team (categories, times, places, places left), created through the UI or `npm run seed` plus team posts, and 20 participant test accounts that have joined nothing. Never on the pilot database. |
 | "Before" kit | A LINE OpenChat (or Facebook group) made by team accounts, containing the **same 12 activities** written as ordinary chat posts, plus some off-topic chatter, as students see today. The participant uses it on the team phone together with Google Maps and the phone calendar. |
 | Recording | Screen recording on the phone (no audio), a stopwatch, and an observation sheet per task (success, time, errors, where stuck, key quotes typed by the note-taker). Results go into one Excel sheet, one row per user, the same day. |
 
 ### 5.5 Session script (about 25 minutes)
 
-Follows the course deck's session format (intro 3', old way 5', tasks and think-aloud, questionnaires 3–6', interview 5'). The T1–T4 limits add up to 5 minutes per condition (§5.6), so both task blocks stay within 5 minutes. The JoinGun block is shorter than the deck's 10–15 minutes because the optional tasks T5–T10 were dropped (decision 2026-11-16, DECISIONS.md #42).
+Follows the course deck's session format (intro 3', old way 5', tasks and think-aloud, questionnaires 3–6', interview 5'). The T1–T4 limits add up to 5 minutes per condition (§5.6), so both task blocks stay within 5 minutes. The JoinGun block is shorter than the deck's 10–15 minutes because the optional tasks T5–T10 were dropped (decision 2026-11-16, DECISIONS.md #51).
 
 | Time | Step |
 | --- | --- |
@@ -241,7 +241,7 @@ Time limits are for scoring only; the participant is not told. A task is **succe
 
 The T1–T4 limits total 5 minutes and are the same in both conditions, matching the deck's 5-minute old-way block. The short limits may cause more timeouts in the "before" condition, so timeouts are counted per condition and noted as a limitation in the report (§11).
 
-The optional JoinGun-only tasks T5–T10 (sign up, host, privacy, report and block, recommendations, data download) were dropped on 2026-11-16 to shorten sessions (DECISIONS.md #42). Those features are covered by the team's system tests (§4), so the user sessions test the core workflow only.
+The optional JoinGun-only tasks T5–T10 (sign up, host, privacy, report and block, recommendations, data download) were dropped on 2026-11-16 to shorten sessions (DECISIONS.md #51). Those features are covered by the team's system tests (§4), so the user sessions test the core workflow only.
 
 ## 6. Metrics
 

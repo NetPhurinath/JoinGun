@@ -21,7 +21,7 @@ Team notes before use:
 - **Fill the `[…]` placeholders** in the consent form (contact person, environment) before printing. The consent form is project text, not legal advice.
 - **One deletion date: 31 ธ.ค. 2569 (31 Dec 2026).** It is used in part A, part G and test plan §5.3, and covers contact details, screener answers, screen recordings, and signed consent forms. The course deck *Post-Midterm Plan* asks teams to keep consent forms, the raw Excel sheet and photos or video for the instructor to check; the date falls after the final presentations so the instructor can check the raw evidence (test plan §10). To change it, change it in all three places before printing. Once participants have signed, an earlier date is fine, but a later one needs their consent again.
 - **No photos and no audio.** The deck asks for "photos or video of testing"; the screen recording (no sound) is that video. The note-taker types key quotes into the observation sheet instead: exact words in quotation marks, own summaries in brackets, no names.
-- **Team test accounts only** (decision 2026-11-16, DECISIONS.md #42): participants never enter their own email or data; accounts are signed in on the team phone before each session. Optional tasks T5–T10 were dropped the same day.
+- **Team test accounts only** (decision 2026-11-16, DECISIONS.md #51): participants never enter their own email or data. Each participant has their own test account, made in advance with plus-addressing on a team `.ac.th` mailbox (`<team address>+u01@lamduan.mfu.ac.th` … `+u20`) and signed in on the team phone before the session, so nobody's consent or settings carry over. Try one `+u01` sign-up first to confirm the university mailbox delivers plus-addressed mail. Write the real addresses only in the team's copy of `uat-record.xlsx` (row 16 of each `B_Uxx` sheet), never in Git. Optional tasks T5–T10 were dropped the same day.
 - Parts G and H are placed after the scoring key so the earlier part letters stay unchanged; use the table above for the order.
 - Print parts A, H, D and E as separate pages; never print the participant code on the same page as the participant's name. Signed consent forms are kept apart from all session data.
 - Parts C (Set A / Set B) assume the UAT data and the "before" chat group contain matching activities. Create them as described in test plan §5.4, with the names, times and places written here.
@@ -105,8 +105,7 @@ Team notes before use:
 
 - [ ] ได้รับแบบยินยอมที่ลงชื่อแล้ว (ข้อ 1 และ 2 ยินยอม) ไม่ถ่ายภาพผู้เข้าร่วม
 - [ ] ได้รับแบบสอบถามก่อนเริ่มทดสอบ (ส่วน H) ที่มีรหัส U...... ครบทุกข้อ
-- [ ] ข้อมูลทดสอบอยู่ในสถานะเริ่มต้น: กิจกรรมชุด A และ B มีที่ว่างครบ บัญชีทดสอบยังไม่ได้เข้าร่วมกิจกรรมใด
-- [ ] บัญชีทดสอบของทีมเข้าสู่ระบบไว้แล้วบนโทรศัพท์ทีม
+- [ ] เข้าสู่ระบบด้วยบัญชีทดสอบของรหัสนี้ (+u......) บนโทรศัพท์ทีม บัญชียังไม่ได้เข้าร่วมกิจกรรมใด และกิจกรรมชุด A กับ B มีที่ว่าง 2 ที่
 - [ ] กลุ่มแชต "ก่อน" เปิดอยู่บนโทรศัพท์ทีม และปฏิทินในโทรศัพท์ไม่มีรายการจากรอบก่อน
 - [ ] เริ่มบันทึกหน้าจอแล้ว (ไม่อัดเสียง)
 - [ ] อ่านคำชี้แจง: "เรากำลังทดสอบระบบ ไม่ได้ทดสอบคุณ ช่วยพูดสิ่งที่คิดออกมาระหว่างทำ ถ้าติดตรงไหนให้ลองแก้เองก่อน ผมจะช่วยไม่ได้ระหว่างทำ"
@@ -159,7 +158,7 @@ Team notes before use:
 
 - [ ] หยุดบันทึกหน้าจอ ตั้งชื่อไฟล์ด้วยรหัส U...... เท่านั้น
 - [ ] ได้รับแบบสอบถาม SUS และ TAM ครบทุกข้อ
-- [ ] ออกจากระบบบัญชีทดสอบ และคืนข้อมูลทดสอบเป็นสถานะเริ่มต้นสำหรับรอบถัดไป
+- [ ] คืนสถานะสำหรับคนถัดไป: ออกจากกิจกรรมฟุตซอลชุด B (คืนที่ว่าง) · ลบรายการในปฏิทินโทรศัพท์ · ลบข้อความในกลุ่มแชต · ออกจากระบบบัญชีนี้
 - [ ] กรอกผลลงแผ่น Excel (หนึ่งแถวต่อผู้ใช้) ภายในวันเดียวกัน
 - [ ] แจ้งปัญหาระดับ 4 ต่อทีมทันที (หยุดการทดสอบตาม test plan §8)
 
