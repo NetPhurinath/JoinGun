@@ -19,8 +19,9 @@ Team notes before use:
 
 - **Draft translation.** The SUS and TAM wording below is the team's own translation. Test plan §6.2 asks for a back-translation by a second team member and a check in the pilot session (U00) before Round 1. Change the wording only before Round 1, never between participants.
 - **Fill the `[…]` placeholders** in the consent form (contact person, environment) before printing. The consent form is project text, not legal advice.
-- **One deletion date: 31 ธ.ค. 2569 (31 Dec 2026).** It is used in part A, part G and test plan §5.3, and covers contact details, screener answers, screen and audio recordings, and signed consent forms. The course deck *Post-Midterm Plan* asks teams to keep consent forms, the raw Excel sheet and photos or video for the instructor to check; the date falls after the final presentations so the instructor can check the raw evidence (test plan §10). To change it, change it in all three places before printing. Once participants have signed, an earlier date is fine, but a later one needs their consent again.
-- **No photos of participants.** The deck asks for "photos or video of testing"; the screen and audio recording is that video.
+- **One deletion date: 31 ธ.ค. 2569 (31 Dec 2026).** It is used in part A, part G and test plan §5.3, and covers contact details, screener answers, screen recordings, and signed consent forms. The course deck *Post-Midterm Plan* asks teams to keep consent forms, the raw Excel sheet and photos or video for the instructor to check; the date falls after the final presentations so the instructor can check the raw evidence (test plan §10). To change it, change it in all three places before printing. Once participants have signed, an earlier date is fine, but a later one needs their consent again.
+- **No photos and no audio.** The deck asks for "photos or video of testing"; the screen recording (no sound) is that video. The note-taker types key quotes into the observation sheet instead: exact words in quotation marks, own summaries in brackets, no names.
+- **Team test accounts only** (decision 2026-11-16, DECISIONS.md #42): participants never enter their own email or data; accounts are signed in on the team phone before each session. Optional tasks T5–T10 were dropped the same day.
 - Parts G and H are placed after the scoring key so the earlier part letters stay unchanged; use the table above for the order.
 - Print parts A, H, D and E as separate pages; never print the participant code on the same page as the participant's name. Signed consent forms are kept apart from all session data.
 - Parts C (Set A / Set B) assume the UAT data and the "before" chat group contain matching activities. Create them as described in test plan §5.4, with the names, times and places written here.
@@ -38,27 +39,25 @@ Team notes before use:
 **1. วัตถุประสงค์**
 ทีมต้องการทดสอบว่า JoinGun ช่วยให้นักศึกษาหาเพื่อนร่วมทำกิจกรรม นัดเวลา และหาจุดนัดพบได้ง่ายขึ้นหรือไม่ เมื่อเทียบกับวิธีที่ใช้อยู่ในปัจจุบัน เช่น กลุ่มแชต การทดสอบนี้ **ทดสอบระบบ ไม่ได้ทดสอบตัวคุณ** ไม่มีคำตอบถูกหรือผิด หากคุณทำบางขั้นตอนไม่ได้ แสดงว่าระบบต้องปรับปรุง
 
-**2. สิ่งที่คุณจะทำ (ประมาณ 30–35 นาที)**
+**2. สิ่งที่คุณจะทำ (ประมาณ 25 นาที)**
 - ก่อนวันทดสอบ ตอบคำถามสั้น ๆ เกี่ยวกับชั้นปี คณะ และวิธีหาเพื่อนทำกิจกรรมในปัจจุบัน
 - ทำงานตามสถานการณ์ที่กำหนดบนโทรศัพท์ที่ทีมเตรียมไว้ ด้วยกลุ่มแชตก่อน แล้วจึงใช้ JoinGun พร้อมพูดสิ่งที่คิดออกมาระหว่างทำ
 - ตอบแบบสอบถามความพึงพอใจและการยอมรับการใช้งาน
 - พูดคุยสั้น ๆ เกี่ยวกับความคิดเห็นของคุณ
 
 **3. ข้อมูลที่เก็บ**
-- **วิดีโอหน้าจอโทรศัพท์และเสียง** ระหว่างทำงาน (ไม่บันทึกใบหน้า และไม่ถ่ายภาพตัวคุณ)
-- เวลาที่ใช้ ผลการทำงาน และบันทึกของผู้สังเกต
+- **วิดีโอหน้าจอโทรศัพท์** ระหว่างทำงาน (ไม่อัดเสียง ไม่บันทึกใบหน้า และไม่ถ่ายภาพตัวคุณ)
+- เวลาที่ใช้ ผลการทำงาน บันทึกของผู้สังเกต และคำพูดสำคัญที่ผู้สังเกตจดไว้ระหว่างที่คุณพูดสิ่งที่คิดออกมา โดยไม่ระบุชื่อ
 - คำตอบแบบสอบถาม ซึ่ง **ไม่ถามชื่อหรืออีเมล** และระบุด้วยรหัสผู้เข้าร่วมเท่านั้น (เช่น U01)
 - ชื่อและช่องทางติดต่อของคุณใช้เพื่อนัดหมายเท่านั้น เก็บแยกจากข้อมูลการทดสอบ และเปิดดูได้เฉพาะผู้รับผิดชอบ
 
 **4. ข้อมูลส่วนตัวของคุณในระบบ**
-[เลือกหนึ่งข้อก่อนพิมพ์]
-- [ ] ระหว่างการทดสอบ คุณจะใช้ **บัญชีทดสอบที่ทีมเตรียมไว้** บนโทรศัพท์ของทีม **โปรดอย่ากรอกอีเมล ชื่อจริง หรือข้อมูลส่วนตัวของคุณเอง** ลงในแอป
-- [ ] ระหว่างการทดสอบ คุณจะสมัครด้วยอีเมลสถานศึกษา (.ac.th) ของคุณเองบนระบบที่ใช้การเชื่อมต่อแบบเข้ารหัส (HTTPS) ข้อมูลในระบบทดสอบจะถูกลบทั้งหมดหลังวิเคราะห์ผลเสร็จ
+ระหว่างการทดสอบ คุณจะใช้ **บัญชีทดสอบที่ทีมเตรียมไว้** บนโทรศัพท์ของทีม **โปรดอย่ากรอกอีเมล ชื่อจริง หรือข้อมูลส่วนตัวของคุณเอง** ลงในแอป
 
 **5. การใช้และการเก็บรักษาข้อมูล**
 - ใช้เพื่อปรับปรุง JoinGun และจัดทำรายงานผลการทดสอบของรายวิชาเท่านั้น
 - รายงานแสดงเฉพาะผลรวมและรหัสผู้เข้าร่วม ไม่ระบุตัวตน คำพูดของคุณอาจถูกยกมาโดยไม่ระบุชื่อ เฉพาะเมื่อคุณยินยอมในข้อ 3 ด้านล่าง
-- ไฟล์วิดีโอหน้าจอและเสียงเก็บในพื้นที่ที่จำกัดสิทธิ์ของทีม ไม่อัปโหลดขึ้นที่เก็บโค้ด (Git) และจะถูกลบภายใน 31 ธ.ค. 2569
+- ไฟล์วิดีโอหน้าจอเก็บในพื้นที่ที่จำกัดสิทธิ์ของทีม ไม่อัปโหลดขึ้นที่เก็บโค้ด (Git) และจะถูกลบภายใน 31 ธ.ค. 2569
 - ชื่อ ช่องทางติดต่อ คำตอบแบบสมัคร และแบบยินยอมที่ลงชื่อแล้ว จะถูกลบภายใน 31 ธ.ค. 2569 เช่นกัน
 
 **6. สิทธิ์ของคุณ**
@@ -76,7 +75,7 @@ Team notes before use:
 | ข้อ | รายการ | ยินยอม | ไม่ยินยอม |
 | --- | --- | --- | --- |
 | 1 | ข้าพเจ้าได้อ่านและเข้าใจข้อมูลข้างต้น มีอายุ 20 ปีขึ้นไป และยินยอมเข้าร่วมการทดสอบโดยสมัครใจ | ☐ | ☐ |
-| 2 | ข้าพเจ้ายินยอมให้บันทึกวิดีโอหน้าจอและเสียงระหว่างการทดสอบ (ไม่บันทึกใบหน้า) เพื่อเป็นหลักฐานการทดสอบให้อาจารย์ผู้สอนตรวจ | ☐ | ☐ |
+| 2 | ข้าพเจ้ายินยอมให้บันทึกวิดีโอหน้าจอระหว่างการทดสอบ (ไม่อัดเสียง ไม่บันทึกใบหน้า) เพื่อเป็นหลักฐานการทดสอบให้อาจารย์ผู้สอนตรวจ | ☐ | ☐ |
 | 3 | ข้าพเจ้ายินยอมให้ยกคำพูดของข้าพเจ้าไปใช้ในรายงานโดยไม่ระบุชื่อ | ☐ | ☐ |
 
 ลงชื่อผู้เข้าร่วม ............................................ (............................................) วันที่ ......../......../........
@@ -107,9 +106,9 @@ Team notes before use:
 - [ ] ได้รับแบบยินยอมที่ลงชื่อแล้ว (ข้อ 1 และ 2 ยินยอม) ไม่ถ่ายภาพผู้เข้าร่วม
 - [ ] ได้รับแบบสอบถามก่อนเริ่มทดสอบ (ส่วน H) ที่มีรหัส U...... ครบทุกข้อ
 - [ ] ข้อมูลทดสอบอยู่ในสถานะเริ่มต้น: กิจกรรมชุด A และ B มีที่ว่างครบ บัญชีทดสอบยังไม่ได้เข้าร่วมกิจกรรมใด
-- [ ] บัญชีทดสอบสำหรับ T5 (ถ้ามีเวลา) พร้อม และผู้ดำเนินการเห็นรหัสยืนยันได้ (โหมด fallback)
+- [ ] บัญชีทดสอบของทีมเข้าสู่ระบบไว้แล้วบนโทรศัพท์ทีม
 - [ ] กลุ่มแชต "ก่อน" เปิดอยู่บนโทรศัพท์ทีม และปฏิทินในโทรศัพท์ไม่มีรายการจากรอบก่อน
-- [ ] เริ่มบันทึกหน้าจอและเสียงแล้ว
+- [ ] เริ่มบันทึกหน้าจอแล้ว (ไม่อัดเสียง)
 - [ ] อ่านคำชี้แจง: "เรากำลังทดสอบระบบ ไม่ได้ทดสอบคุณ ช่วยพูดสิ่งที่คิดออกมาระหว่างทำ ถ้าติดตรงไหนให้ลองแก้เองก่อน ผมจะช่วยไม่ได้ระหว่างทำ"
 
 ### วิธีบันทึก
@@ -118,6 +117,7 @@ Team notes before use:
 - **ผล:** ✓ สำเร็จ / ✗ ไม่สำเร็จ / H ต้องช่วยเหลือ (นับเป็นไม่สำเร็จ) / T เกินเวลา (นับเป็นไม่สำเร็จ) — ไม่บอกผู้เข้าร่วมเรื่องเวลาจำกัด
 - **ข้อผิดพลาด:** นับครั้งที่ไปผิดทาง เลือกกิจกรรมผิด หรือตอบจำนวน/เวลาผิด
 - **SEQ:** หลังจบแต่ละงานถามว่า *"โดยรวมแล้ว งานนี้ยากหรือง่ายแค่ไหน จาก 1 ยากมาก ถึง 7 ง่ายมาก"*
+- **คำพูด:** จดคำพูดสำคัญในช่อง "สิ่งที่สังเกต / คำพูด" คำพูดตรงตัวใส่ในเครื่องหมายคำพูด ส่วนที่สรุปเองใส่วงเล็บ ไม่จดชื่อ
 - **ปัญหา:** ระบุระดับ 0–4 ตาม Nielsen: 4 หายนะ / 3 รุนแรง / 2 เล็กน้อย / 1 ความสวยงาม / 0 ไม่ใช่ปัญหา (test plan §7)
 
 ### งานที่ต้องทำ T1–T4: เงื่อนไข "ก่อน" (ทำก่อน; ชุด A; กลุ่มแชต + Google Maps + ปฏิทินโทรศัพท์)
@@ -137,20 +137,6 @@ Team notes before use:
 | T2 เข้าร่วม | 1 นาที | | | | | อ่านข้อความความยินยอม ☐ ใช่ ☐ ข้าม / จำนวนที่ตอบ: ...... (ถูก ☐ ผิด ☐) |
 | T3 หาจุดนัด | 1 นาที | | | | | |
 | T4 ตั้งเตือน | 1 นาที | | | | | ใช้ ☐ การตั้งค่าเตือนใน JoinGun ☐ เพิ่มลงปฏิทิน |
-
-### งานเสริม T5–T10 (ใน JoinGun เท่านั้น ทำเฉพาะถ้ามีเวลา ไม่นับในเป้าหมาย)
-
-| งาน | เวลาจำกัด | เวลาที่ใช้ (วินาที) | ผล | ข้อผิดพลาด | SEQ (1–7) | สิ่งที่สังเกต / คำพูด |
-| --- | --- | --- | --- | --- | --- | --- |
-| T5 สมัครสมาชิก | 4 นาที | | | | | อ่านข้อตกลง ☐ ใช่ ☐ ข้าม |
-| T6 สร้างกิจกรรม | 4 นาที | | | | | ปักหมุดถูกจุด ☐ / ตั้งใจให้ความยินยอมตำแหน่ง ☐ ใช่ ☐ กดผ่าน |
-| T7 ความเป็นส่วนตัว | 2 นาที | | | | | |
-| T8 รายงานและบล็อก | 3 นาที | | | | | ระบุเหตุผล ☐ / บล็อกสำเร็จ ☐ |
-| T9 คำแนะนำ | 3 นาที | | | | | ปัจจัยที่ผู้เข้าร่วมบอก: ............ |
-| T10 ดาวน์โหลดข้อมูล | 3 นาที | | | | | ตั้งรหัสผ่านไฟล์ ☐ |
-
-**ถ้าทำ T9 ถามต่อ:** *"คำแนะนำนี้มาจากใคร หรือมาจากอะไร"*
-คำตอบ: ................................................................ กล่าวถึงป้าย AI หรือระบบคะแนน ☐ ใช่ ☐ ไม่ใช่
 
 ### ปัญหาที่พบ
 
@@ -181,7 +167,7 @@ Team notes before use:
 
 ## C. บัตรสถานการณ์สำหรับผู้เข้าร่วม
 
-ผู้ดำเนินการอ่านหรือยื่นบัตรทีละใบ ใช้ชุด A กับเงื่อนไข "ก่อน" (กลุ่มแชต ทำก่อน) และชุด B กับเงื่อนไข "หลัง" (JoinGun) T5–T10 ใช้เฉพาะถ้ามีเวลา
+ผู้ดำเนินการอ่านหรือยื่นบัตรทีละใบ ใช้ชุด A กับเงื่อนไข "ก่อน" (กลุ่มแชต ทำก่อน) และชุด B กับเงื่อนไข "หลัง" (JoinGun)
 
 | งาน | ชุด A (แบดมินตัน) | ชุด B (ฟุตซอล) | เกณฑ์สำเร็จ (สำหรับทีม) |
 | --- | --- | --- | --- |
@@ -189,19 +175,12 @@ Team notes before use:
 | T2 เข้าร่วม | "ขอเข้าร่วมก๊วนนั้น แล้วบอกว่าหลังจากคุณเข้าไปแล้วเหลือที่ว่างกี่ที่" | "ขอเข้าร่วมทีมนั้น แล้วบอกว่าหลังจากคุณเข้าไปแล้วเหลือที่ว่างกี่ที่" | ก่อน: ส่งข้อความถึงผู้จัดและตอบจำนวนถูก / หลัง: สถานะ "เข้าร่วมแล้ว" และตอบจำนวนถูก |
 | T3 หาจุดนัด | "ชี้ให้ดูว่าจะไปเจอกันที่ไหน และจะเดินทางไปอย่างไร" | (เหมือนชุด A) | แสดงจุดนัดบนแผนที่และเปิดเส้นทางได้ |
 | T4 ตั้งเตือน | "ทำให้แน่ใจว่าคุณจะได้รับการเตือนก่อนกิจกรรมเริ่ม 1 ชั่วโมง" | (เหมือนชุด A) | ตั้งการเตือนตรงเวลาได้ |
-| T5 สมัครสมาชิก | "สร้างบัญชีด้วยอีเมลสถานศึกษานี้: [อีเมลทดสอบ]" | — | เข้าสู่ระบบได้ ยอมรับข้อตกลง และตั้งชื่อโปรไฟล์ |
-| T6 สร้างกิจกรรม | "โพสต์ชวนติวหนังสือพรุ่งนี้ 13:00 น. รับ 4 คน และปักหมุดที่ทางเข้าห้องสมุด" | — | โพสต์ขึ้นฟีด เวลา จำนวน และหมุดถูกต้อง |
-| T7 ความเป็นส่วนตัว | "ตั้งค่าให้เฉพาะเพื่อนของคุณเท่านั้นที่เห็นว่าคุณเคยเข้าร่วมกิจกรรมอะไรบ้าง" | — | ตั้งประวัติเป็น "เฉพาะเพื่อน" |
-| T8 รายงานและบล็อก | "มีโพสต์หนึ่งดูเหมือนหลอกลวง ให้รายงานโพสต์นั้น แล้วทำให้คุณไม่เห็นโพสต์ของคนนี้อีก" | — | ส่งรายงานพร้อมเหตุผล และบล็อกผู้โพสต์ |
-| T9 คำแนะนำ | "เปิดใช้การแนะนำกิจกรรม แล้วบอกว่าทำไมกิจกรรมแรกจึงถูกแนะนำให้คุณ" | — | ให้ความยินยอม และบอกปัจจัยบนการ์ดได้อย่างน้อย 1 ข้อ |
-| T10 ดาวน์โหลดข้อมูล | "ดาวน์โหลดสำเนาข้อมูลของคุณ" | — | ดาวน์โหลด ZIP พร้อมตั้งรหัสผ่าน |
 
 Team note — UAT data needed for these cards (test plan §5.4), same content in JoinGun and in the "before" chat group:
 
 - Set A: one badminton activity on Saturday after 17:00 with 2 places left, plus decoys (badminton before 17:00, badminton on Saturday after 17:00 already full, another sport on Saturday evening).
 - Set B: one futsal activity on Sunday after 16:00 with 2 places left, plus decoys of the same kinds.
 - Both target activities have a meeting point pinned on the map and written in words in the chat post.
-- One post for T8 that looks like a scam, written by a team test account.
 - Adjust the weekday wording on the cards if the session dates make "this Saturday/Sunday" ambiguous.
 
 ---
@@ -284,7 +263,7 @@ Do not print this part for participants.
 
 ### Observation sheet to data file
 
-One row per participant × task × condition, with columns: `participant` (U01–U14), `round`, `condition` (before/after/joingun-only), `set` (A/B/—), `task` (T1–T10), `seconds`, `result` (success/fail/assist/timeout), `errors`, `seq`. Keep the file free of names and contact details. A summary sheet with one row per user (task results, SUS, TAM construct means) is the Excel sheet the course deck asks for.
+One row per participant × task × condition, with columns: `participant` (U01–U14), `round`, `condition` (before/after), `set` (A/B), `task` (T1–T4), `seconds`, `result` (success/fail/assist/timeout), `errors`, `seq`. Keep the file free of names and contact details. A summary sheet with one row per user (task results, SUS, TAM construct means) is the Excel sheet the course deck asks for.
 
 ### Pre-session questionnaire (part H) to data file
 
@@ -308,7 +287,7 @@ Team notes:
 
 **แบบสมัครเข้าร่วมทดสอบแอป JoinGun**
 
-ทีม JoinGun (รายวิชา 1305493) กำลังหานักศึกษามาช่วยทดสอบแอปสำหรับหาเพื่อนร่วมทำกิจกรรม การทดสอบใช้เวลาประมาณ 30–35 นาที แบบตัวต่อตัว ที่ [สถานที่] ในวันพุธที่ 4 พ.ย. หรือวันที่ 7–8 พ.ย. 2569
+ทีม JoinGun (รายวิชา 1305493) กำลังหานักศึกษามาช่วยทดสอบแอปสำหรับหาเพื่อนร่วมทำกิจกรรม การทดสอบใช้เวลาประมาณ 25 นาที แบบตัวต่อตัว ที่ [สถานที่] ในวันพุธที่ 4 พ.ย. หรือวันที่ 7–8 พ.ย. 2569
 
 แบบฟอร์มนี้ใช้ตรวจคุณสมบัติและติดต่อนัดหมายเท่านั้น ใช้เวลากรอกประมาณ 2 นาที ข้อมูลเปิดดูได้เฉพาะผู้รับผิดชอบการทดสอบ ไม่นำไปใช้ในรายงาน และจะถูกลบภายใน 31 ธ.ค. 2569 การสมัครไม่ได้หมายความว่าจะได้รับเลือก และคุณถอนตัวได้ทุกเมื่อ
 

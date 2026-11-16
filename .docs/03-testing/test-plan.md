@@ -178,7 +178,7 @@ The method deck's rule of thumb: the "Cannot" column matters most, and it must b
 ### 5.1 Design
 
 - **At least 10 completed sessions; plan for 12** (U01–U12) plus 2 reserves (U13–U14), so no-shows do not drop the count below 10. One pilot session (U00) with someone outside the sample is not counted.
-- **Moderated, one participant per session, about 30–35 minutes**, in person on campus. A Moderator gives the tasks and a Note-taker times and records. The participant thinks aloud; the moderator says "we are testing the system, not you" and never helps or points. A task stuck past its time limit counts as failed.
+- **Moderated, one participant per session, about 25 minutes**, in person on campus. A Moderator gives the tasks and a Note-taker times and records. The participant thinks aloud; the moderator says "we are testing the system, not you" and never helps or points. A task stuck past its time limit counts as failed.
 - **Two rounds**, as the course deck suggests (test 5 → fix → test 5 more): Round 1 (U01–U06) on **Wed 4 Nov**, fix the serious problems, Round 2 (U07–U12) on 7–8 Nov. Problems found in Round 1 should not recur in Round 2.
 - **Before vs after** is a within-subject comparison: each participant first does the core tasks **their current way** (a chat group, "before"), then **with JoinGun** ("after"), as the course deck asks (old way first, for the baseline time). The two conditions use different but equivalent scenarios (Set A: badminton for "before", Set B: futsal for "after") so participants do not remember answers. The fixed order is a limitation (§11).
 
@@ -196,12 +196,12 @@ Recruitment: posts in club and faculty groups, with a short screener that only c
 
 ### 5.3 Ethics and personal data of participants
 
-- Informed consent (PDPA) before each session: a participant information sheet and consent form in Thai giving the purpose, what is recorded, how long it is kept, and the right to stop at any time. Ask separately before recording audio or video.
+- Informed consent (PDPA) before each session: a participant information sheet and consent form in Thai giving the purpose, what is recorded, how long it is kept, and the right to stop at any time. Ask separately before recording video.
 - Participants are known only by code (U01…). Names, contact details and screener answers stay in a separate sign-up sheet that only QA can open.
-- Record **screen video and voice only**: no faces and no photos of participants. This screen recording is the "photos or video of testing" evidence the *Post-Midterm Plan* deck asks for. Questionnaires collect no name or email.
+- Record **screen video only, with no audio**: no faces and no photos of participants. This screen recording is the "photos or video of testing" evidence the *Post-Midterm Plan* deck asks for. Instead of an audio recording, the note-taker types key quotes into the observation sheet (in quotation marks; their own summaries in brackets), with no names. Questionnaires collect no name or email.
 - No raw recordings or identifiable notes go into the Git repository; only aggregated results go into `test-report.md`.
-- **Deletion date.** The deck asks teams to keep consent forms, the raw Excel sheet and photos or video for the instructor to check. Names, contact details, screener answers, screen and audio recordings and signed consent forms are therefore kept until the instructor has checked them, then deleted by **31 Dec 2026** (31 ธ.ค. 2569), the same date written in the consent form (part A) and screener (part G) of [uat-materials-th.md](uat-materials-th.md). The raw Excel sheet holds no names or contact details and is not deleted.
-- Until JoinGun runs on HTTPS (delivery step 7), participants **do not enter their own email or personal data**. They use test accounts prepared by the team on a team phone, and any sign-up task uses a team-controlled `.ac.th` test address (the moderator reads the code). Once HTTPS hosting is approved by the Tech Lead, participants may use their own email on their own phone. The UAT database is separate from any pilot database and is wiped after analysis.
+- **Deletion date.** The deck asks teams to keep consent forms, the raw Excel sheet and photos or video for the instructor to check. Names, contact details, screener answers, screen recordings and signed consent forms are therefore kept until the instructor has checked them, then deleted by **31 Dec 2026** (31 ธ.ค. 2569), the same date written in the consent form (part A) and screener (part G) of [uat-materials-th.md](uat-materials-th.md). The raw Excel sheet holds no names or contact details and is not deleted.
+- Participants **do not enter their own email or personal data**. They use test accounts prepared and signed in by the team on a team phone; there is no sign-up task (decision 2026-11-16, DECISIONS.md #42). The UAT database is separate from any pilot database and is wiped after analysis.
 
 ### 5.4 Environment and test data
 
@@ -210,19 +210,19 @@ Recruitment: posts in club and faculty groups, with a short screener that only c
 | Server | Local server on a team laptop on the same Wi-Fi, opened from a team Android phone (hosting is not decided, step 7). If a deployed HTTPS host is ready before 4 Nov, it may be used instead. Which one was used is written in the report, because NFR1/NFR3 results differ. |
 | Data | A UAT database with 12 activities over the next 7 days written by the team (categories, times, places, places left), created through the UI or `npm run seed` plus team posts. Never on the pilot database. |
 | "Before" kit | A LINE OpenChat (or Facebook group) made by team accounts, containing the **same 12 activities** written as ordinary chat posts, plus some off-topic chatter, as students see today. The participant uses it on the team phone together with Google Maps and the phone calendar. |
-| Recording | Screen recording on the phone, a stopwatch, and an observation sheet per task (success, time, errors, where stuck, key quotes). Results go into one Excel sheet, one row per user, the same day. |
+| Recording | Screen recording on the phone (no audio), a stopwatch, and an observation sheet per task (success, time, errors, where stuck, key quotes typed by the note-taker). Results go into one Excel sheet, one row per user, the same day. |
 
-### 5.5 Session script (about 30–35 minutes)
+### 5.5 Session script (about 25 minutes)
 
-Follows the course deck's session format (intro 3', old way 5', tasks and think-aloud 10–15', questionnaires 3–6', interview 5'). The T1–T4 limits add up to 5 minutes per condition (§5.6), so the old-way block stays within 5 minutes, and the JoinGun block spends at most 5 minutes on T1–T4 and the rest on T5–T10.
+Follows the course deck's session format (intro 3', old way 5', tasks and think-aloud, questionnaires 3–6', interview 5'). The T1–T4 limits add up to 5 minutes per condition (§5.6), so both task blocks stay within 5 minutes. The JoinGun block is shorter than the deck's 10–15 minutes because the optional tasks T5–T10 were dropped (decision 2026-11-16, DECISIONS.md #42).
 
 | Time | Step |
 | --- | --- |
-| 0–3 | Intro and consent: "we are testing the system, not you"; information sheet, consent form, recording permission |
+| 0–3 | Intro and consent: "we are testing the system, not you"; information sheet, consent form, screen-recording permission |
 | 3–8 | Old way (baseline): tasks T1–T4 with the "before" kit (Set A) |
-| 8–23 | Tasks with JoinGun and think-aloud: T1–T4 (Set B); then T5–T10 only if time allows |
-| 23–29 | Questionnaires: SUS immediately after the tasks, then TAM |
-| 29–34 | Interview, 3 questions: What did you like? Where did you get stuck? Would you keep using it, and why? |
+| 8–13 | Tasks with JoinGun and think-aloud: T1–T4 (Set B) |
+| 13–19 | Questionnaires: SUS immediately after the tasks, then TAM |
+| 19–24 | Interview, 3 questions: What did you like? Where did you get stuck? Would you keep using it, and why? |
 
 A short pre-session questionnaire (year, faculty, current ways to find activity partners, how often it fails) is filled in when the user books, not during the session.
 
@@ -241,20 +241,7 @@ Time limits are for scoring only; the participant is not told. A task is **succe
 
 The T1–T4 limits total 5 minutes and are the same in both conditions, matching the deck's 5-minute old-way block. The short limits may cause more timeouts in the "before" condition, so timeouts are counted per condition and noted as a limitation in the report (§11).
 
-**Optional tasks T5–T10 (JoinGun only; only if time allows, not counted in the targets)**
-
-These features are covered by the team's system tests (§4); in a session they add usability notes only.
-
-| Task | Scenario | Success criterion | Limit | Traces to |
-| --- | --- | --- | --- | --- |
-| T5 Sign up | "Create an account with this university email." | Signed in with terms accepted and a profile name | 4 min | F1, 1.1–1.3 |
-| T6 Host | "Post a study group for tomorrow 13:00, 4 people, and pin the library entrance on the map." | Post appears in the feed with correct time, capacity and pin; location consent given knowingly | 4 min | F2, 2.1, 3.1, LR1 |
-| T7 Privacy | "Make it so only your friends can see which activities you joined." | History visibility set to friends only (the default is only me) | 2 min | F5, 7.3 |
-| T8 Safety | "A post looks like a scam. Report it, then make sure you never see this person's posts." | Report sent with a reason and author blocked | 3 min | 5.3, rule.md |
-| T9 Recommendations | "Turn on recommendations and tell me why the first one was suggested to you." | Consent given; participant states at least one factor shown on the card | 3 min | F6, LR4 |
-| T10 Your data | "Download a copy of your data." | ZIP downloaded with a password chosen | 3 min | rule.md PDPA |
-
-If T9 is done, also ask: "Who made this suggestion?" — the answer should mention the AI/points label (checks LR4 understanding).
+The optional JoinGun-only tasks T5–T10 (sign up, host, privacy, report and block, recommendations, data download) were dropped on 2026-11-16 to shorten sessions (DECISIONS.md #42). Those features are covered by the team's system tests (§4), so the user sessions test the core workflow only.
 
 ## 6. Metrics
 
@@ -383,7 +370,7 @@ Dependencies: real-email sign-up by participants and the final NFR1/NFR3/NFR4 nu
 | `.docs/03-testing/test-report.md` | Per test case: what it checks, pass/fail, date run, environment, the acceptance criterion it maps to; NFR measurements; UAT results (before/after, SUS, TAM), problems found and fixed; known gaps | 10 Nov |
 | P3 User Evidence Log (portfolio) | Who was tested with (U-codes, year, faculty), when, and what was found; links to the evidence below | 10 Nov |
 | P4 Impact Metrics (portfolio) | Before/after task results, SUS, TAM; plus one metric on AI's impact on the team's SDLC | 10 Nov |
-| Raw evidence (outside Git if it contains personal data) | Signed consent forms, the raw Excel sheet (one row per user), observation sheets, interview notes, screen and audio recordings taken with permission | Kept for the instructor to check, then identifiable items deleted by 31 Dec 2026 (§5.3) |
+| Raw evidence (outside Git if it contains personal data) | Signed consent forms, the raw Excel sheet (one row per user), observation sheets, interview notes, screen recordings taken with permission | Kept for the instructor to check, then identifiable items deleted by 31 Dec 2026 (§5.3) |
 | UAT materials | Consent form, screener, observation sheet, SUS/TAM forms, "before" kit description ([uat-materials-th.md](uat-materials-th.md)) | Phase 1 |
 | `tests/e2e/*.spec.js` | Playwright tests, each title starting with its requirement ID (e.g. `2.4 LR1 — core journey…`) | Exists since 2026-10-28 (6 tests) |
 

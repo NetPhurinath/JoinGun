@@ -109,6 +109,14 @@ The Tech Lead chose Railway for hosting and Railway's PostgreSQL for the databas
 
 | 50 | Send email through the Gmail API over HTTPS (OAuth refresh token, scope `gmail.send`) when `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN` are set; SMTP with the App Password stays for local use. `npm run gmail-token` gets the token. | Given by the Tech Lead on 2026-10-30: the first Render deploy logged `Gmail send failed: ETIMEDOUT` because free web services block SMTP ports, and the Tech Lead chose the free Gmail API over a paid Render plan. No domain is needed and no package is added. | `server/mailer.js`, `server/index.js`, `server/config.js`, `server/scripts/gmail-token.js` |
 
+## UAT simplification, 2026-11-16
+
+The user chose these to shorten the user sessions. They change the test plan's session design, so the Product Owner still has to confirm them.
+
+| # | Decision | Why | Where to change |
+| --- | --- | --- | --- |
+| 42 | User sessions test only the core tasks T1–T4 (before and after); the optional JoinGun-only tasks T5–T10 are dropped. Screen video is recorded **without audio**; the note-taker types key quotes into the observation sheet instead. Participants use **team test accounts only**, signed in on the team phone, and never enter their own email. A session takes about 25 minutes. | The course deck requires success rate, time, errors and before/after time on the core workflow, photos or video, and key quotes; it does not require the optional tasks, audio or self sign-up. T5–T10 are covered by the system tests (test plan §4). No audio and no own email also mean less personal data. | `.docs/03-testing/test-plan.md` and `test-plan-th.md` §5.1, §5.3–§5.6, §10; `uat-materials-th.md` parts A, B, C, F, G and team notes; `.docs/03-testing/uat-record.xlsx`; the printable consent form (Claude Doc) |
+
 ## Still open (not decided here)
 
 - Domain, monthly budget and when to leave Render's free plans (Tech Lead), and whether Render's disk and database encryption is enough (the disk-encryption question in decision 24).
