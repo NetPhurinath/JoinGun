@@ -70,7 +70,7 @@ One index for the complete project, from Discover through Deliver.
   - [UAT materials](../03-testing/uat-materials-th.md)
   - [UAT document and test records (JoinGun - Testing.xlsx)](../03-testing/JoinGun%20-%20Testing.xlsx)
   - [SUS & TAM responses workbook](../03-testing/JoinGun%20%E2%80%94%20%E0%B9%81%E0%B8%9A%E0%B8%9A%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B8%96%E0%B8%B2%E0%B8%A1%20SUS%20%E0%B9%81%E0%B8%A5%E0%B8%B0%20TAM%20%28Responses%29.xlsx)
-  - [No-real-user-test summary & PROXY evidence](../03-testing/no-real-user-test.md) (also at [test/no-real-user-test.md](../../test/no-real-user-test.md))
+  - [Testing summary & informal usability test evidence](../03-testing/no-real-user-test.md) (also at [test/no-real-user-test.md](../../test/no-real-user-test.md))
 - `server/test/` — [API and database tests](../../server/test/)
 - `tests/e2e/` — [Core journey browser test](../../tests/e2e/core-journey.spec.js)
 

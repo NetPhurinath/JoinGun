@@ -16,7 +16,7 @@
 - **Chawin Thachai (Product Owner):** Gathered requirements, checked that the work followed them, prepared related project documents, and helped decide what the team would work on.
 - **Phurinath Janjirahpoonpon (Designer):** Created diagrams, worked on the frontend, and prepared documents describing the system structure.
 - **Supawat Chaimoon (Tech Lead):** Worked on the backend, deployment, and test plan.
-- **Parinya Chotchungtakul (QA/Test):** Tested the system and conducted testing with real users.
+- **Parinya Chotchungtakul (QA/Test):** Tested the system and conducted informal (ad hoc) usability testing with 16 real users.
 
 **Date:** 5th September 2026
 
