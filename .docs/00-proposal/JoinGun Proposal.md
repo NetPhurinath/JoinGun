@@ -10,6 +10,14 @@
 **Supawat Chaimoon		(Tech Lead)**  
 **Parinya Chotchungtakul		(QA/Test)**
 
+### Team member role statements
+
+- **Chayabordin Maophimpha (AI Lead):** Worked on `agent.md`, `claude.md`, and the system's recommendation feature, but these contributions were not completed. Also worked on other AI-related parts of creating the project.
+- **Chawin Thachai (Product Owner):** Gathered requirements, checked that the work followed them, prepared related project documents, and helped decide what the team would work on.
+- **Phurinath Janjirahpoonpon (Designer):** Created diagrams, worked on the frontend, and prepared documents describing the system structure.
+- **Supawat Chaimoon (Tech Lead):** Worked on the backend, deployment, and test plan.
+- **Parinya Chotchungtakul (QA/Test):** Tested the system and conducted testing with real users.
+
 **Date:** 5th September 2026
 
 **1\. Executive Summary**
