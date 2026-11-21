@@ -84,7 +84,7 @@ One index for the complete project, from Discover through Deliver.
 - `role-statements/`
   - [6631503013-Chayabordin-Maophimpha.md](role-statements/6631503013-Chayabordin-Maophimpha.md)
   - [6631503014-Chawin-Thachai.md](role-statements/6631503014-Chawin-Thachai.md)
-  - [6631503033-Phurinath-Janjirahuponpon.md](role-statements/6631503033-Phurinath-Janjirahuponpon.md)
+  - [6631503033-Phurinath-Janjirahpoonpon.md](role-statements/6631503033-Phurinath-Janjirahpoonpon.md)
   - [6631503043-Supawat-Chaimoon.md](role-statements/6631503043-Supawat-Chaimoon.md)
   - [6631503112-Parinya-Chot-chungtakul.md](role-statements/6631503112-Parinya-Chot-chungtakul.md)
 
